@@ -161,7 +161,7 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 .card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
 .badge { width: 88px; padding: 8px 0 6px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--reserve); color: #1a1226; border: 2px solid rgba(255,255,255,0.6); }
 .badge b { font-family: var(--font-display); font-size: 38px; line-height: 1; font-weight: 400; }
-.badge .ini { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: rgba(26,18,38,0.14); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }\n.badge .ini img { width:100%; height:100%; display:block; object-fit:cover; border-radius:50%; }
+.badge .ini { width: 70px; height: 92px; border-radius: 9px; overflow: hidden; background: rgba(26,18,38,0.14); background-size: contain; background-position: center; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }\n.badge .ini img { width:100%; height:100%; display:block; object-fit:contain; object-position:center; border-radius:8px; background:rgba(255,255,255,.08); }
 .badge i { font-style: normal; font-weight: 700; font-size: 13px; }
 .badge.gold { background: var(--gold); }
 .badge.silver { background: var(--silver); }
@@ -784,8 +784,30 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
       G.msg = 'ماحدش اشترى ' + p.short;
       G.msgClass = '';
     }
-    G.phase = 'sold';
-    G.pause = 2.2;
+    if (G.leader) {
+      // After each successful purchase, award the opponent one next player for free.
+      var other = G.leader === A ? B : A;
+      var freeIdx = -1;
+      for (var fi = 0; fi < SLOTS.length; fi++) { if (!other.slots[fi]) { freeIdx = fi; break; } }
+      if (freeIdx >= 0) {
+        var freePos = SLOTS[freeIdx].pos;
+        var bonus = freePlayer(freePos) || { name: 'لاعب مجاني', short: 'مجاني', pos: freePos, rating: 70, cat: '', club: '', tier: 'res', photo: '' };
+        other.slots[freeIdx] = bonus;
+        G.cur = bonus;
+        G.price = 0;
+        G.leader = other;
+        G.phase = 'bonus';
+        G.msg = other.name + ' حصل على ' + bonus.short + ' مجانًا!';
+        G.msgClass = cls(other);
+        G.pause = 1.8;
+      } else {
+        G.phase = 'sold';
+        G.pause = 2.2;
+      }
+    } else {
+      G.phase = 'sold';
+      G.pause = 2.2;
+    }
     renderPitches();
     renderAuction();
   }
@@ -883,6 +905,9 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     } else if (G.phase === 'free') {
       G.pause -= dt;
       if (G.pause <= 0) nextFree();
+    } else if (G.phase === 'bonus') {
+      G.pause -= dt;
+      if (G.pause <= 0) nextRound();
     }
   }
 
@@ -903,11 +928,15 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
       var im = new Image();
       im.onload = function () {
         try {
-          var side = Math.min(im.width, im.height);
+          // Fit the complete original photo inside the image box; never crop the player.
           var c = document.createElement('canvas');
-          c.width = c.height = 128;
-          c.getContext('2d').drawImage(im, (im.width - side) / 2, (im.height - side) * 0.1, side, side, 0, 0, 128, 128);
-          resolve(c.toDataURL('image/jpeg', 0.82));
+          c.width = 256; c.height = 320;
+          var ctx = c.getContext('2d');
+          ctx.fillStyle = '#d9dce5'; ctx.fillRect(0, 0, c.width, c.height);
+          var scale = Math.min(c.width / im.width, c.height / im.height);
+          var w = im.width * scale, h = im.height * scale;
+          ctx.drawImage(im, (c.width - w) / 2, (c.height - h) / 2, w, h);
+          resolve(c.toDataURL('image/jpeg', 0.86));
         } catch (e) { resolve(null); }
       };
       im.onerror = function () { resolve(null); };
