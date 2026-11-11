@@ -3,7 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>[hidden]{display:none!important} body{margin:0}</style>
+<style>[hidden]{display:none!important} body{margin:0}
+/* Ali Games: visual refresh inspired by the supplied football-auction video */
+:root{
+ --bg:#21102f;--surface:#321947;--surface-2:#48245b;--line:#b88b68;
+ --fg:#fff8ee;--muted:#e0c8d8;--accent:#ffe600;--accent-ink:#21102f;
+ --good:#63ed83;--grass-a:#248343;--grass-b:#176b35;--chalk:#e4f5dc;
+}
+html,body{background:radial-gradient(ellipse at 50% 0%,#713a7c 0%,#32183f 45%,#160d22 100%);min-height:100%}
+body{padding-top:10px}
+main{max-width:560px;gap:16px}
+.brand{font-size:34px;text-shadow:0 3px 0 #160d22}
+.top{padding:10px 12px;background:linear-gradient(120deg,#713a7c,#32183f);border:2px solid #c69a78;border-radius:18px}
+.side{padding:13px;background:linear-gradient(145deg,#57306a,#2d1744);border:2px solid #c69a78;border-radius:22px;box-shadow:0 8px 0 rgba(0,0,0,.2),0 0 18px rgba(255,220,180,.12);gap:11px}
+.side-h{align-items:center}
+.who{font-size:18px;text-shadow:0 2px 3px #160d22}
+.bud{font-size:34px;color:#65f08a;text-shadow:0 2px 0 #153d22}
+.bud small{font-size:13px;color:#f2d8e9}
+.pitch{padding:5px;background:#257c40;border:2px solid #9fcf9d;border-radius:13px;box-shadow:inset 0 0 18px rgba(0,0,0,.18)}
+.pitch svg{border-radius:8px}
+.auction{padding:17px;background:linear-gradient(145deg,#b78c70,#e1c2a2 45%,#6f456b);border:3px solid #f1d7bd;border-radius:24px;box-shadow:0 9px 0 rgba(0,0,0,.28)}
+#live{background:linear-gradient(145deg,#47235e,#241338);border:2px solid #a77b9b;border-radius:18px;padding:14px;box-shadow:inset 0 0 22px rgba(255,255,255,.05)}
+.card{grid-template-columns:132px minmax(0,1fr);gap:14px;min-height:170px}
+.badge{width:126px;min-height:158px;padding:8px 0;background:#f4c64f;border:3px solid #fff0d6;border-radius:18px;box-shadow:0 5px 14px rgba(0,0,0,.25)}
+.badge b{font-size:40px;color:#21102f}
+.badge .ini{width:108px;height:104px;border-radius:12px;background:#c9b6a5;background-size:cover}
+.badge .ini img{border-radius:10px;object-fit:cover}
+.badge i{font-size:14px;color:#21102f}
+.pname{font-size:30px;color:#fff;text-shadow:0 3px 0 #1b1028}
+.pmeta{font-size:13px;color:#f0d9eb}
+.offer{background:linear-gradient(180deg,#355b7a,#152e49);border:2px solid #9dbbd4;border-radius:15px;padding:8px;color:white;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.olbl{font-size:20px}
+.oval{font-size:44px;color:#fff}
+.ofull{font-size:42px;color:#ffed00;-webkit-text-stroke:1.5px #160d22;text-shadow:3px 4px 0 #160d22,0 0 8px rgba(0,0,0,.5)}
+.bar{height:10px;background:#21102f;border:1px solid rgba(255,255,255,.15)}
+.bar>i{background:linear-gradient(90deg,#ffb52e,#fff000)}
+.status{font-size:15px;color:#fff}
+.ctrls .btn{background:#321947;border-color:#a77b9b}
+.ctrls .btn.primary{background:#ffe600;color:#21102f;border-color:#fff0a0}
+.btn{border-radius:13px;padding:11px 7px}
+.mode{background:linear-gradient(145deg,#4b285f,#28163d);border:1px solid #b88b68;border-radius:18px}
+@media(max-width:390px){
+ .card{grid-template-columns:108px minmax(0,1fr);gap:10px}
+ .badge{width:104px;min-height:140px}
+ .badge .ini{width:88px;height:92px}
+ .pname{font-size:25px}
+ .ofull{font-size:34px}
+ .bud{font-size:28px}
+}
+</style>
 <title>علي جيمز | Ali Games</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -564,8 +612,8 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
   function renderAuction() {
     $('name-a').textContent = A.name;
     $('name-b').textContent = B.name;
-    $('bud-a').innerHTML = '<small>الميزانية</small>' + A.budget + 'M';
-    $('bud-b').innerHTML = '<small>الميزانية</small>' + B.budget + 'M';
+    $('bud-a').innerHTML = '💵 <small>الميزانية</small>' + A.budget + 'M';
+    $('bud-b').innerHTML = '💵 <small>الميزانية</small>' + B.budget + 'M';
     $('round').textContent = G.phase === 'free' ? 'لاعيبة مجانية' : 'اللاعب رقم ' + G.shown + (G.cur ? ' · ' + POSAR[G.cur.pos] : '');
 
     var p = G.cur;
