@@ -254,6 +254,32 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     <p class="legend">المزاد بيمشي بالترتيب: حارس، بعده الأظهرة، بعده قلب الدفاع، بعده الوسط، بعده الهجوم. اللاعب اللي مكان مركزه مليان عند الفريقين أو ميزانيتهم مش بتكفيه بيتخطى. في الآخر لاعيبة مجانية بتكمّل أي مكان فاضي لحد ما التشكيلة تكتمل. القائمة ١١٢ لاعب بتقييم من 79 لـ 99.</p>
   </section>
 
+
+    <section class="mode" id="arcade-menu">
+      <h2>🎮 ألعاب إضافية</h2>
+      <p>اختار لعبة سريعة والعب مباشرة من علي جيمز.</p>
+      <div class="row2">
+        <button class="btn primary" type="button" id="open-brick">🧱 تكسير الطوب</button>
+        <button class="btn primary" type="button" id="open-block">🟦 بلوك بلست</button>
+      </div>
+    </section>
+
+    <section class="mode" id="arcade" hidden>
+      <div class="side-h"><h2 id="arcade-title">الألعاب</h2><button class="menu-btn" id="arcade-back" type="button">رجوع</button></div>
+      <div class="side-h"><span class="legend" id="arcade-help">اختار لعبة</span><b class="pinfo" id="arcade-score">النقاط: 0</b></div>
+      <div id="brick-wrap" hidden>
+        <canvas id="brick-canvas" width="360" height="520" aria-label="لعبة تكسير الطوب"></canvas>
+        <div class="row2"><button class="btn primary" id="brick-start" type="button">ابدأ / العب من جديد</button><button class="btn" id="brick-pause" type="button">إيقاف مؤقت</button></div>
+        <p class="legend">حرّك المضرب بإصبعك أو بالماوس، وخلّي الكرة تكسر كل الطوب.</p>
+      </div>
+      <div id="block-wrap" hidden>
+        <div id="block-board" aria-label="لوحة بلوك بلست"></div>
+        <div id="block-pieces"></div>
+        <button class="btn" id="block-new" type="button">لعبة جديدة</button>
+        <p class="legend">اختار شكل من الأشكال أسفل اللوحة، ثم اضغط مكان وضعه. امسح صفًا أو عمودًا كاملًا لتحصل على نقاط.</p>
+      </div>
+    </section>
+
   <!-- Game page -->
   <section id="game" hidden style="display:flex;flex-direction:column;gap:12px">
     <header class="top">
@@ -992,6 +1018,91 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 
   loadPrefs();
   setInterval(tick, 100);
+
+
+  // ---------- extra arcade games ----------
+  function showArcade(which) {
+    $('arcade').hidden = false;
+    $('arcade-menu').hidden = true;
+    $('brick-wrap').hidden = which !== 'brick';
+    $('block-wrap').hidden = which !== 'block';
+    $('arcade-title').textContent = which === 'brick' ? '🧱 تكسير الطوب' : '🟦 بلوك بلست';
+    $('arcade-help').textContent = which === 'brick' ? 'حرّك المضرب لصد الكرة' : 'اختار قطعة ثم مكانها على الشبكة';
+    if (which === 'brick') startBrick();
+    else newBlockGame();
+  }
+  $('open-brick').addEventListener('click', function(){showArcade('brick');});
+  $('open-block').addEventListener('click', function(){showArcade('block');});
+  $('arcade-back').addEventListener('click', function(){
+    stopBrick(); $('arcade').hidden=true; $('arcade-menu').hidden=false;
+  });
+
+  // Brick breaker
+  var bc=$('brick-canvas'), bx=bc.getContext('2d'), brickState=null, brickFrame=0, brickPaused=true;
+  function startBrick(){
+    cancelAnimationFrame(brickFrame);
+    brickState={x:180,y:430,dx:3,dy:-3,r:7,p:58,px:151,score:0,lives:3,bricks:[]};
+    for(var rr=0;rr<6;rr++) for(var cc=0;cc<7;cc++) brickState.bricks.push({x:9+cc*49,y:48+rr*25,w:43,h:17,on:true});
+    brickPaused=false; drawBrick();
+  }
+  function stopBrick(){brickPaused=true;cancelAnimationFrame(brickFrame);}
+  function drawBrick(){
+    if(!brickState)return;
+    var g=brickState; bx.clearRect(0,0,360,520);
+    bx.fillStyle='#101827';bx.fillRect(0,0,360,520);
+    bx.fillStyle='#f3d45b';bx.font='bold 16px Cairo';bx.textAlign='center';bx.fillText('النقاط: '+g.score+'   المحاولات: '+g.lives,180,25);
+    g.bricks.forEach(function(b,i){if(!b.on)return;bx.fillStyle=['#ff6b8a','#ffa94d','#65d98b','#57b9ff','#b48aff','#f3d45b'][Math.floor(i/7)];bx.fillRect(b.x,b.y,b.w,b.h);});
+    bx.fillStyle='#f5f0ff';bx.fillRect(g.px,478,g.p,10);
+    bx.beginPath();bx.arc(g.x,g.y,g.r,0,Math.PI*2);bx.fillStyle='#fff';bx.fill();
+    if(!brickPaused){
+      g.x+=g.dx;g.y+=g.dy;
+      if(g.x<g.r||g.x>360-g.r)g.dx*=-1;
+      if(g.y<35)g.dy=Math.abs(g.dy);
+      if(g.y+g.r>=478&&g.x>=g.px&&g.x<=g.px+g.p&&g.dy>0){g.dy=-Math.abs(g.dy);g.dx+=(g.x-(g.px+g.p/2))/18;}
+      g.bricks.forEach(function(b){if(b.on&&g.x>b.x&&g.x<b.x+b.w&&g.y-g.r<b.y+b.h&&g.y+g.r>b.y){b.on=false;g.dy*=-1;g.score+=10;}});
+      if(g.y>530){g.lives--;g.x=180;g.y=430;g.dx=3;g.dy=-3;if(g.lives<=0){brickPaused=true;}}
+      if(g.bricks.every(function(b){return !b.on;})){g.score+=100;g.bricks.forEach(function(b){b.on=true;});g.dy=-Math.abs(g.dy);}
+      $('arcade-score').textContent='النقاط: '+g.score;
+      if(!brickPaused)brickFrame=requestAnimationFrame(drawBrick);
+      else {bx.fillStyle='#fff';bx.font='bold 24px Cairo';bx.fillText(g.lives<=0?'انتهت اللعبة!':'أحسنت!',180,270);}
+    }
+  }
+  function movePaddle(e){if(!brickState)return;var r=bc.getBoundingClientRect();var x=(e.clientX-r.left)*360/r.width;brickState.px=Math.max(0,Math.min(360-brickState.p, x-brickState.p/2));if(brickPaused)drawBrick();}
+  bc.addEventListener('pointermove',movePaddle);
+  bc.addEventListener('pointerdown',movePaddle);
+  $('brick-start').addEventListener('click',startBrick);
+  $('brick-pause').addEventListener('click',function(){if(!brickState)return;brickPaused=!brickPaused;if(!brickPaused)drawBrick();else cancelAnimationFrame(brickFrame);});
+
+  // Block Blast: choose one of three shapes, tap a valid top-left cell to place it.
+  var blockGrid=[],blockShapes=[],blockSelected=-1,blockScore=0;
+  var SHAPES=[[[0,0]],[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,1],[1,0]],[[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[1,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]],[[0,0],[1,0],[1,1],[2,1]],[[0,1],[1,0],[1,1],[1,2]],[[0,0],[1,0],[2,0],[2,1],[2,2]]];
+  function newBlockGame(){blockGrid=Array.from({length:8},()=>Array(8).fill(0));blockScore=0;blockSelected=-1;makeBlockPieces();renderBlock();}
+  function makeBlockPieces(){blockShapes=[];for(var i=0;i<3;i++)blockShapes.push(SHAPES[Math.floor(Math.random()*SHAPES.length)]);blockSelected=-1;}
+  function renderBlock(){
+    var board=$('block-board');board.innerHTML='';
+    for(var y=0;y<8;y++)for(var x=0;x<8;x++){var c=document.createElement('button');c.type='button';c.className='block-cell'+(blockGrid[y][x]?' filled':'');c.setAttribute('aria-label','صف '+(y+1)+' عمود '+(x+1));c.addEventListener('click',(function(xx,yy){return function(){placeBlock(xx,yy);};})(x,y));board.appendChild(c);}
+    var tray=$('block-pieces');tray.innerHTML='';
+    blockShapes.forEach(function(shape,i){var p=document.createElement('button');p.type='button';p.className='block-piece'+(i===blockSelected?' selected':'');p.disabled=!shape;p.addEventListener('click',function(){blockSelected=i;renderBlock();});var maxX=Math.max.apply(null,shape.map(function(q){return q[0];})),maxY=Math.max.apply(null,shape.map(function(q){return q[1];}));for(var yy=0;yy<=maxY;yy++)for(var xx=0;xx<=maxX;xx++){var z=document.createElement('span');if(!shape.some(function(q){return q[0]===xx&&q[1]===yy;}))z.className='empty';p.appendChild(z);}tray.appendChild(p);});
+    $('arcade-score').textContent='النقاط: '+blockScore;
+  }
+  function canPlace(shape,x,y){return shape.every(function(q){var xx=x+q[0],yy=y+q[1];return xx>=0&&xx<8&&yy>=0&&yy<8&&!blockGrid[yy][xx];});}
+  function placeBlock(x,y){
+    if(blockSelected<0||!blockShapes[blockSelected])return;
+    var sh=blockShapes[blockSelected];if(!canPlace(sh,x,y)){ $('arcade-help').textContent='المكان ده مش مناسب للقطعة، جرّب مكان تاني';return;}
+    sh.forEach(function(q){blockGrid[y+q[1]][x+q[0]]=1;});
+    blockScore+=sh.length;
+    var fullRows=[];for(var r=0;r<8;r++)if(blockGrid[r].every(Boolean))fullRows.push(r);
+    var fullCols=[];for(var c=0;c<8;c++){var full=true;for(var rr=0;rr<8;rr++)if(!blockGrid[rr][c])full=false;if(full)fullCols.push(c);}
+    fullRows.forEach(function(r){for(var c=0;c<8;c++)blockGrid[r][c]=0;});
+    fullCols.forEach(function(c){for(var r=0;r<8;r++)blockGrid[r][c]=0;});
+    blockScore+=(fullRows.length+fullCols.length)*20;
+    blockShapes[blockSelected]=null;blockSelected=-1;
+    if(blockShapes.every(function(q){return !q;}))makeBlockPieces();
+    renderBlock();
+    var possible=blockShapes.some(function(shape){return shape&&Array.from({length:8},function(_,yy){return Array.from({length:8},function(_,xx){return canPlace(shape,xx,yy);}).some(Boolean);}).some(Boolean);});
+    if(!possible){$('arcade-help').textContent='انتهت اللعبة! اضغط لعبة جديدة للعب مرة أخرى.';blockShapes=[null,null,null];renderBlock();}
+  }
+  $('block-new').addEventListener('click',newBlockGame);
 
 })();
 </script>
