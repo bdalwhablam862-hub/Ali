@@ -29,8 +29,7 @@ main{max-width:none;padding:0;gap:0}
 .stock-label{display:none}
 .tile{border-radius:10px;border:3px solid #e6d7c5;background:linear-gradient(145deg,#fff0db,#cbb49e);box-shadow:inset 0 0 0 2px #9b8370,0 3px 5px #24202488}
 .tile .pip{background:#17120f}
-.board .tile.double{width:54px;min-width:54px;height:98px}
-.board .tile.mixed{width:98px;min-width:98px;height:54px}
+.board .tile.double,.board .tile.mixed{width:98px;min-width:98px;height:54px}
 .hand{position:absolute;bottom:56px;left:0;right:0;height:120px;justify-content:center;overflow-x:auto;background:transparent}
 .hand .tile.handtile{width:58px;min-width:58px;height:104px;flex-direction:column;border-radius:10px}
 .hand .tile.handtile span{width:100%;height:50%}
@@ -54,8 +53,7 @@ main{padding:0;gap:0}
 .board{margin-top:70px;margin-bottom:130px;padding:5px 42px 5px 5px;gap:4px}
 .stock-pile{right:2px}
 .stock-pile .backtile{width:34px;height:44px;flex-basis:44px;margin-bottom:-34px}
-.board .tile.double{width:45px;min-width:45px;height:82px}
-.board .tile.mixed{width:82px;min-width:82px;height:45px}
+.board .tile.double,.board .tile.mixed,.board .tile.played-tile{width:82px;min-width:82px;height:45px;flex-basis:82px}
 .hand{bottom:48px;height:108px;justify-content:space-around;gap:3px;padding:3px}
 .hand .tile.handtile{width:45px;min-width:45px;height:88px;border-width:3px}
 .hand .tile.handtile .pip{width:6px;height:6px}
@@ -78,7 +76,11 @@ main{padding:0;gap:0}
 .chatbox input{width:100%;background:#090a10;border:1px solid #555;border-radius:8px;padding:8px}
 .quickemojis{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
 .quickemojis button{padding:4px 8px}
-.board{overflow:auto;scrollbar-width:thin}
+.board{display:flex;flex-wrap:nowrap;justify-content:flex-start;align-items:center;direction:ltr;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;white-space:nowrap}
+.board .tile.played-tile{display:inline-flex;flex-direction:row;width:98px;min-width:98px;height:54px;flex:0 0 98px}
+.board .tile.played-tile span{width:50%;height:100%}
+.board .tile.played-tile span+span{border-top:0;border-left:2px solid #5c4c40}
+.board .tile.played-tile .pips{width:50%;height:100%}
 @media(max-width:650px){.tools{top:42px;left:5px}.tools button{font-size:10px;padding:5px 7px}.chatbox{top:78px;left:5px}}
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
@@ -105,7 +107,7 @@ function deck(){const d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b
 const ends=()=>chain.length?[chain[0][0],chain[chain.length-1][1]]:[];
 const can=t=>!chain.length||ends().some(n=>t[0]===n||t[1]===n);
 function face(n){const p={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+p[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>'}
-const tile=(t,played=false)=>'<span class="tile '+(played?(t[0]===t[1]?'double':'mixed'):'handtile')+'">'+face(t[0])+face(t[1])+'</span>';
+const tile=(t,played=false)=>'<span class="tile '+(played?'played-tile':(t[0]===t[1]?'double':'mixed')+' handtile')+'">'+face(t[0])+face(t[1])+'</span>';
 function render(){
  $('youCount').textContent=you.length;$('cpuCount').textContent=cpu.length;$('stockCount').textContent=stock.length;
  $('opponent-hand').innerHTML=cpu.map(()=>'<span class="backtile"></span>').join('');
