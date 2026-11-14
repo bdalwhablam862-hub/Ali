@@ -82,6 +82,13 @@ main{padding:0;gap:0}
 .board .tile.played-tile span+span{border-top:0;border-left:2px solid #5c4c40}
 .board .tile.played-tile .pips{width:50%;height:100%}
 @media(max-width:650px){.tools{top:42px;left:5px}.tools button{font-size:10px;padding:5px 7px}.chatbox{top:78px;left:5px}}
+
+/* إصلاح مساحة منتصف الطاولة: الهوامش كانت بتضغط ارتفاع اللوحة وتخفي القطع */
+.board{margin:0!important;padding:54px 56px 10px 10px!important;min-height:0;height:100%;align-content:center}
+@media(max-width:650px){
+  .board{margin:0!important;padding:48px 42px 5px 5px!important;height:100%;min-height:0}
+}
+
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
 <section class="stage"><div class="tools"><button id="chatToggle">💬 الدردشة</button><button id="helpToggle">❔ مساعدة</button><button id="emojiToggle">😊</button></div><div class="chatbox hidden" id="chatBox"><b>دردشة الطاولة</b><div class="chatlog" id="chatLog">ابدأوا اللعب واستمتعوا!<br></div><input id="chatInput" maxlength="120" placeholder="اكتب رسالة واضغط Enter"><div class="quickemojis"><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="👍">👍</button><button data-emoji="🔥">🔥</button><button data-emoji="❤️">❤️</button></div><p class="help">الدردشة الحالية داخل نفس الصفحة؛ الدردشة الحية بين جهازين تحتاج ربط خدمة أونلاين.</p></div><div class="playfield">
