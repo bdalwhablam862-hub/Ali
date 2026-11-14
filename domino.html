@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>دومينو | Ali Games</title>
+<style>
+:root{color-scheme:dark;--bg:#150d26;--surface:#211735;--line:#4a3768;--gold:#ffe04a;--fg:#f4effb;--muted:#b8abc9}
+*{box-sizing:border-box}body{margin:0;padding:16px;background:radial-gradient(ellipse at top,#35204d,var(--bg) 65%);color:var(--fg);font-family:system-ui,"Cairo",sans-serif}
+main{max-width:650px;margin:auto;display:grid;gap:12px}.top,.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.top h1{font-size:25px;margin:0}.muted,.help{color:var(--muted);font-size:13px}
+button{font:inherit;color:inherit;background:#34264d;border:1px solid #665080;border-radius:10px;padding:10px 13px;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}.primary{background:var(--gold);color:#20182b;border-color:var(--gold);font-weight:800}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.stats{display:flex;justify-content:space-between;gap:8px}.stat{background:#171124;padding:9px 12px;border-radius:10px;flex:1;text-align:center}.stat b{display:block;color:var(--gold);font-size:22px}
+.board{min-height:100px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;padding:12px;background:#17633c;border:3px solid #b5d7a7;border-radius:14px}
+.tile{display:inline-flex;align-items:center;justify-content:center;gap:0;background:#fff8e8;color:#20182b;border:2px solid #d9cba8;border-radius:7px;box-shadow:0 2px 0 #9b8b6b;min-width:54px;height:32px;font-weight:900;font-size:17px;direction:ltr}
+.tile span{width:50%;text-align:center}.tile span+span{border-left:2px solid #887b65}.tile.back{background:repeating-linear-gradient(45deg,#4c3b69,#4c3b69 5px,#6c568d 5px,#6c568d 10px);border-color:#a28cbe}
+.hand{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;min-height:48px}.hand button{padding:5px;background:transparent;border:0}.hand .tile{height:40px;min-width:62px;font-size:19px}.hand button.selected .tile{outline:3px solid var(--gold);transform:translateY(-4px)}
+.notice{text-align:center;min-height:24px;font-weight:700}.notice.good{color:#72ef9a}.notice.warn{color:#ffd56a}
+@media(max-width:390px){body{padding:9px}.tile{min-width:45px;height:29px;font-size:15px}.hand .tile{min-width:54px}}
+</style></head>
+<body><main>
+<header class="top"><div><h1>🁣 دومينو</h1><div class="muted">ALI GAMES · العب ضد الكمبيوتر</div></div><button onclick="location.href='index.html'">رجوع للألعاب</button></header>
+<section class="panel stats"><div class="stat">يدك<b id="youCount">7</b></div><div class="stat">الكمبيوتر<b id="cpuCount">7</b></div><div class="stat">السحب<b id="stockCount">14</b></div></section>
+<section class="panel"><div class="muted">الطاولة</div><div class="board" id="board"><span class="muted">ابدأ جولة جديدة</span></div></section>
+<section class="panel"><div class="stats"><b>دورك</b><span class="muted" id="turnInfo">اضغط ابدأ</span></div><div class="hand" id="hand"></div><div class="row" style="justify-content:center;margin-top:10px"><button class="primary" id="drawBtn" disabled>اسحب قطعة</button><button id="passBtn" disabled>عدّي الدور</button><button id="newBtn">لعبة جديدة</button></div><p class="help">اضغط على قطعة من يدك للعبها. لو القطعة تركب من الناحيتين، اختار الاتجاه بعد تحديدها.</p><div class="notice" id="notice" aria-live="polite"></div></section>
+</main>
+<script>
+(function(){
+const $=id=>document.getElementById(id);let you=[],cpu=[],stock=[],chain=[],turn='you',selected=null,over=false,passes=0;
+function makeDeck(){let d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b]);return d.sort(()=>Math.random()-.5)}
+function pip(n){return n===0?'0':String(n)}
+function tileHTML(t){return '<span class="tile"><span>'+pip(t[0])+'</span><span>'+pip(t[1])+'</span></span>'}
+function ends(){return chain.length?[chain[0][0],chain[chain.length-1][1]]:[]}
+function canPlay(t){if(!chain.length)return true;let e=ends();return t[0]===e[0]||t[1]===e[0]||t[0]===e[1]||t[1]===e[1]}
+function orient(t,side){let e=ends();if(!chain.length)return t.slice();if(side==='left')return t[1]===e[0]?[t[0],t[1]]:[t[1],t[0]];return t[0]===e[1]?[t[0],t[1]]:[t[1],t[0]]}
+function render(){
+$('youCount').textContent=you.length;$('cpuCount').textContent=cpu.length;$('stockCount').textContent=stock.length;
+$('board').innerHTML=chain.length?chain.map(tileHTML).join(''):'<span class="muted">الطاولة فاضية — ابدأ بأي قطعة</span>';
+$('hand').innerHTML=you.map((t,i)=>'<button data-i="'+i+'" class="'+(selected===i?'selected':'')+'" '+(over||turn!=='you'||!canPlay(t)?'disabled':'')+'>'+tileHTML(t)+'</button>').join('');
+$('drawBtn').disabled=over||turn!=='you'||!stock.length||you.some(canPlay);
+$('passBtn').disabled=over||turn!=='you'||stock.length>0&&you.some(canPlay);
+$('turnInfo').textContent=over?'انتهت الجولة':turn==='you'?'دورك':'دور الكمبيوتر';
+}
+function say(s,kind){$('notice').textContent=s;$('notice').className='notice '+(kind||'')}
+function score(hand){return hand.reduce((n,t)=>n+t[0]+t[1],0)}
+function finish(winner,msg){over=true;let extra=winner==='you'?score(cpu):winner==='cpu'?score(you):0;say(msg+(extra?' · نقاطك من الجولة: '+extra:''),'good');render()}
+function afterMove(){selected=null;passes=0;if(!you.length){finish('you','كسبت الجولة! 🎉');return}if(!cpu.length){finish('cpu','الكمبيوتر كسب الجولة');return}turn=turn==='you'?'cpu':'you';render();if(turn==='cpu')setTimeout(cpuTurn,650)}
+function put(hand,index,side){let t=hand.splice(index,1)[0];if(!chain.length)chain.push(t);else if(side==='left')chain.unshift(orient(t,'left'));else chain.push(orient(t,'right'));afterMove()}
+function playYou(i){if(turn!=='you'||over||!canPlay(you[i]))return;let t=you[i],e=ends(),left=!chain.length||t[0]===e[0]||t[1]===e[0],right=!chain.length||t[0]===e[1]||t[1]===e[1];if(left&&right&&chain.length&&e[0]!==e[1]){selected=i;render();say('القطعة تركب من الناحيتين: اختار الطرف','warn');$('notice').insertAdjacentHTML('beforeend',' <button id="leftChoice">الشمال</button> <button id="rightChoice">اليمين</button>');$('leftChoice').onclick=()=>put(you,i,'left');$('rightChoice').onclick=()=>put(you,i,'right');return}put(you,i,left?'left':'right')}
+function cpuTurn(){if(over||turn!=='cpu')return;let opts=cpu.map((t,i)=>({t,i})).filter(x=>canPlay(x.t));if(opts.length){opts.sort((a,b)=>(b.t[0]+b.t[1])-(a.t[0]+a.t[1]));let x=opts[0],e=ends(),side=!chain.length||x.t[0]===e[0]||x.t[1]===e[0]?'left':'right';put(cpu,x.i,side);say('الكمبيوتر لعب قطعة');return}if(stock.length){cpu.push(stock.pop());render();setTimeout(cpuTurn,350);return}passes++;turn='you';render();say('الكمبيوتر عدّى الدور')}
+function draw(){if(turn!=='you'||over||!stock.length)return;you.push(stock.pop());if(you.some(canPlay)){say('اسحبت قطعة — دورك تلعب','good')}else if(!stock.length){say('مفيش قطعة مناسبة، عدّي الدور','warn')}render()}
+function pass(){if(turn!=='you'||over)return;if(stock.length&& !you.some(canPlay)){say('اسحب من القطع الأول');return}if(you.some(canPlay)){say('عندك قطعة تقدر تلعبها!');return}passes++;if(passes>=2){let winner=score(you)<score(cpu)?'you':score(cpu)<score(you)?'cpu':'draw';finish(winner,winner==='draw'?'تعادل — الطاولة اتقفلت':winner==='you'?'كسبت بالنقاط!':'الكمبيوتر كسب بالنقاط');return}turn='cpu';render();setTimeout(cpuTurn,500)}
+function start(){let d=makeDeck();you=d.splice(0,7);cpu=d.splice(0,7);stock=d;chain=[];turn='you';selected=null;over=false;passes=0;say('ابدأ! اختار أي قطعة من إيدك');render()}
+$('hand').addEventListener('click',e=>{let b=e.target.closest('button[data-i]');if(b)playYou(Number(b.dataset.i))});
+$('drawBtn').onclick=draw;$('passBtn').onclick=pass;$('newBtn').onclick=start;start();
+})();
+</script></body></html>
