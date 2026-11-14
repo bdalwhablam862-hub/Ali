@@ -51,6 +51,15 @@ main{max-width:560px;gap:16px}
  .ofull{font-size:34px}
  .bud{font-size:28px}
 }
+
+#brick-canvas{display:block;width:100%;height:auto;max-width:360px;margin:0 auto;border:2px solid #536783;border-radius:16px;touch-action:none}
+#block-board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;width:min(100%,420px);aspect-ratio:1;margin:8px auto;padding:7px;background:#1a2540;border:2px solid #60749a;border-radius:14px}
+.block-cell{min-width:0;aspect-ratio:1;border:1px solid #354666;border-radius:5px;background:#263653;padding:0}
+.block-cell.filled{background:linear-gradient(145deg,#58c9ff,#3973e8);border-color:#a9e8ff;box-shadow:inset 0 2px 4px #ffffff55,0 2px 5px #0005}
+#block-pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center;margin:12px 0}
+.block-piece{min-height:94px;display:grid;grid-template-columns:repeat(5,13px);grid-auto-rows:13px;gap:3px;align-content:center;justify-content:center;background:#202c49;border:2px solid #465b82;border-radius:12px;padding:8px;cursor:grab}
+.block-piece span{background:linear-gradient(145deg,#ffcf55,#f28b38);border-radius:3px;box-shadow:inset 0 1px 2px #fff8}
+.block-piece span.empty{visibility:hidden}.block-piece.selected{border-color:#ffe45e;background:#3b3a48;transform:translateY(-2px)}.block-piece:disabled{opacity:.2}
 </style>
 <title>علي جيمز | Ali Games</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1105,6 +1114,7 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     fullCols.forEach(function(c){for(var r=0;r<8;r++)blockGrid[r][c]=0;});
     var cleared=fullRows.length+fullCols.length;if(cleared){blockCombo=blockTurn-blockLastClear<=3?blockCombo+1:1;blockLastClear=blockTurn;blockScore+=10*cleared*cleared*blockCombo;$('arcade-help').textContent='رائع! مسحت '+cleared+' صف/عمود'+(blockCombo>1?' — كومبو ×'+blockCombo:'');}else if(blockTurn-blockLastClear>3)blockCombo=0;
     blockShapes[blockSelected]=null;blockSelected=-1;
+    if(blockScore>blockBest){blockBest=blockScore;try{localStorage.setItem('aliBlockBest',String(blockBest));}catch(e){}}
     if(blockShapes.every(function(q){return !q;}))makeBlockPieces();
     renderBlock();
     var possible=blockShapes.some(function(shape){return shape&&Array.from({length:8},function(_,yy){return Array.from({length:8},function(_,xx){return canPlace(shape,xx,yy);}).some(Boolean);}).some(Boolean);});
