@@ -1074,35 +1074,35 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
   $('brick-pause').addEventListener('click',function(){if(!brickState)return;brickPaused=!brickPaused;if(!brickPaused)drawBrick();else cancelAnimationFrame(brickFrame);});
 
   // Block Blast: choose one of three shapes, tap a valid top-left cell to place it.
-  var blockGrid=[],blockShapes=[],blockSelected=-1,blockScore=0;
-  var SHAPES=[[[0,0]],[[0,0],[0,1]],[[0,0],[1,0]],[[0,0],[0,1],[1,0]],[[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[1,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]],[[0,0],[1,0],[1,1],[2,1]],[[0,1],[1,0],[1,1],[1,2]],[[0,0],[1,0],[2,0],[2,1],[2,2]]];
-  function newBlockGame(){blockGrid=Array.from({length:8},()=>Array(8).fill(0));blockScore=0;blockSelected=-1;makeBlockPieces();renderBlock();}
+  var blockGrid=[],blockShapes=[],blockSelected=-1,blockScore=0,blockBest=0,blockCombo=0,blockLastClear=-9,blockTurn=0;
+  var SHAPES=[[[0,0]],[[0,0],[1,0]],[[0,0],[0,1]],[[0,0],[1,0],[2,0]],[[0,0],[0,1],[0,2]],[[0,0],[1,0],[2,0],[3,0]],[[0,0],[0,1],[0,2],[0,3]],[[0,0],[1,0],[2,0],[3,0],[4,0]],[[0,0],[0,1],[0,2],[0,3],[0,4]],[[0,0],[1,0],[0,1],[1,1]],[[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]],[[0,0],[0,1],[0,2],[1,2]],[[0,0],[1,0],[1,1],[1,2]],[[0,0],[1,0],[2,0],[1,1]],[[1,0],[0,1],[1,1],[2,1]],[[0,0],[1,0],[1,1],[2,1]],[[1,0],[2,0],[0,1],[1,1]],[[0,0],[0,1],[1,1],[1,2]],[[1,0],[0,1],[1,1],[0,2]],[[0,0],[1,0],[2,0],[2,1],[2,2]],[[0,0],[1,0],[2,0],[1,1],[1,2]]];
+  function newBlockGame(){blockGrid=Array.from({length:8},()=>Array(8).fill(0));blockScore=0;blockCombo=0;blockLastClear=-9;blockTurn=0;blockSelected=-1;try{blockBest=Number(localStorage.getItem('aliBlockBest')||0);}catch(e){blockBest=0;}makeBlockPieces();$('arcade-help').textContent='اسحب القطعة أو اخترها ثم اضغط مكان وضعها. لا يمكن تدوير القطع.';renderBlock();}
   function makeBlockPieces(){blockShapes=[];for(var i=0;i<3;i++)blockShapes.push(SHAPES[Math.floor(Math.random()*SHAPES.length)]);blockSelected=-1;}
   function renderBlock(){
     var board=$('block-board');board.innerHTML='';
     for(var y=0;y<8;y++)for(var x=0;x<8;x++){var c=document.createElement('button');c.type='button';c.className='block-cell'+(blockGrid[y][x]?' filled':'');c.setAttribute('aria-label','صف '+(y+1)+' عمود '+(x+1));c.addEventListener('click',(function(xx,yy){return function(){placeBlock(xx,yy);};})(x,y));board.appendChild(c);}
     var tray=$('block-pieces');tray.innerHTML='';
-    blockShapes.forEach(function(shape,i){var p=document.createElement('button');p.type='button';p.className='block-piece'+(i===blockSelected?' selected':'');p.disabled=!shape;p.addEventListener('click',function(){blockSelected=i;renderBlock();});var maxX=Math.max.apply(null,shape.map(function(q){return q[0];})),maxY=Math.max.apply(null,shape.map(function(q){return q[1];}));for(var yy=0;yy<=maxY;yy++)for(var xx=0;xx<=maxX;xx++){var z=document.createElement('span');if(!shape.some(function(q){return q[0]===xx&&q[1]===yy;}))z.className='empty';p.appendChild(z);}tray.appendChild(p);});
-    $('arcade-score').textContent='النقاط: '+blockScore;
+    blockShapes.forEach(function(shape,i){var p=document.createElement('button');p.type='button';p.className='block-piece'+(i===blockSelected?' selected':'');p.disabled=!shape;p.draggable=!!shape;p.addEventListener('click',function(){blockSelected=i;renderBlock();});p.addEventListener('dragstart',function(e){blockSelected=i;e.dataTransfer.setData('text/plain',String(i));});var maxX=Math.max.apply(null,shape.map(function(q){return q[0];})),maxY=Math.max.apply(null,shape.map(function(q){return q[1];}));for(var yy=0;yy<=maxY;yy++)for(var xx=0;xx<=maxX;xx++){var z=document.createElement('span');if(!shape.some(function(q){return q[0]===xx&&q[1]===yy;}))z.className='empty';p.appendChild(z);}tray.appendChild(p);});
+    if(blockScore>blockBest){blockBest=blockScore;try{localStorage.setItem('aliBlockBest',String(blockBest));}catch(e){}} $('arcade-score').textContent='النقاط: '+blockScore+' | الأفضل: '+blockBest+' | كومبو: '+blockCombo;
   }
   function canPlace(shape,x,y){return shape.every(function(q){var xx=x+q[0],yy=y+q[1];return xx>=0&&xx<8&&yy>=0&&yy<8&&!blockGrid[yy][xx];});}
   function placeBlock(x,y){
     if(blockSelected<0||!blockShapes[blockSelected])return;
     var sh=blockShapes[blockSelected];if(!canPlace(sh,x,y)){ $('arcade-help').textContent='المكان ده مش مناسب للقطعة، جرّب مكان تاني';return;}
     sh.forEach(function(q){blockGrid[y+q[1]][x+q[0]]=1;});
-    blockScore+=sh.length;
+    blockScore+=sh.length;blockTurn++;
     var fullRows=[];for(var r=0;r<8;r++)if(blockGrid[r].every(Boolean))fullRows.push(r);
     var fullCols=[];for(var c=0;c<8;c++){var full=true;for(var rr=0;rr<8;rr++)if(!blockGrid[rr][c])full=false;if(full)fullCols.push(c);}
     fullRows.forEach(function(r){for(var c=0;c<8;c++)blockGrid[r][c]=0;});
     fullCols.forEach(function(c){for(var r=0;r<8;r++)blockGrid[r][c]=0;});
-    blockScore+=(fullRows.length+fullCols.length)*20;
+    var cleared=fullRows.length+fullCols.length;if(cleared){blockCombo=blockTurn-blockLastClear<=3?blockCombo+1:1;blockLastClear=blockTurn;blockScore+=10*cleared*cleared*blockCombo;$('arcade-help').textContent='رائع! مسحت '+cleared+' صف/عمود'+(blockCombo>1?' — كومبو ×'+blockCombo:'');}else if(blockTurn-blockLastClear>3)blockCombo=0;
     blockShapes[blockSelected]=null;blockSelected=-1;
     if(blockShapes.every(function(q){return !q;}))makeBlockPieces();
     renderBlock();
     var possible=blockShapes.some(function(shape){return shape&&Array.from({length:8},function(_,yy){return Array.from({length:8},function(_,xx){return canPlace(shape,xx,yy);}).some(Boolean);}).some(Boolean);});
     if(!possible){$('arcade-help').textContent='انتهت اللعبة! اضغط لعبة جديدة للعب مرة أخرى.';blockShapes=[null,null,null];renderBlock();}
   }
-  $('block-new').addEventListener('click',newBlockGame);
+  $('block-new').addEventListener('click',newBlockGame);$('block-board').addEventListener('dragover',function(e){e.preventDefault();});$('block-board').addEventListener('drop',function(e){e.preventDefault();var cell=e.target.closest('.block-cell');if(!cell)return;blockSelected=Number(e.dataTransfer.getData('text/plain'));var idx=Array.prototype.indexOf.call($('block-board').children,cell);placeBlock(idx%8,Math.floor(idx/8));});
 
 })();
 </script>
