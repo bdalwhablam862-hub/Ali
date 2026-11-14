@@ -1041,27 +1041,35 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
   var bc=$('brick-canvas'), bx=bc.getContext('2d'), brickState=null, brickFrame=0, brickPaused=true;
   function startBrick(){
     cancelAnimationFrame(brickFrame);
-    brickState={x:180,y:430,dx:3,dy:-3,r:7,p:58,px:151,score:0,lives:3,bricks:[]};
-    for(var rr=0;rr<6;rr++) for(var cc=0;cc<7;cc++) brickState.bricks.push({x:9+cc*49,y:48+rr*25,w:43,h:17,on:true});
-    brickPaused=false; drawBrick();
+    brickState={x:180,y:430,dx:3,dy:-3,r:7,p:64,px:148,score:0,lives:3,level:1,bricks:[]};
+    makeBrickLevel();brickPaused=false;drawBrick();
+  }
+  function makeBrickLevel(){
+    var g=brickState;g.bricks=[];
+    var rows=Math.min(4+Math.floor((g.level-1)/2),7);
+    var palette=['#ff6482','#ffad4d','#6bdd91','#56baff','#b58aff','#f2d45c'];
+    for(var rr=0;rr<rows;rr++)for(var cc=0;cc<7;cc++){
+      if(g.level>2&&(rr+cc+g.level)%9===0)continue;
+      g.bricks.push({x:9+cc*49,y:48+rr*25,w:43,h:17,on:true,hp:(g.level>=3&&rr<2?2:1),color:palette[(rr+g.level-1)%palette.length]});
+    }
   }
   function stopBrick(){brickPaused=true;cancelAnimationFrame(brickFrame);}
   function drawBrick(){
     if(!brickState)return;
     var g=brickState; bx.clearRect(0,0,360,520);
     bx.fillStyle='#101827';bx.fillRect(0,0,360,520);
-    bx.fillStyle='#f3d45b';bx.font='bold 16px Cairo';bx.textAlign='center';bx.fillText('النقاط: '+g.score+'   المحاولات: '+g.lives,180,25);
-    g.bricks.forEach(function(b,i){if(!b.on)return;bx.fillStyle=['#ff6b8a','#ffa94d','#65d98b','#57b9ff','#b48aff','#f3d45b'][Math.floor(i/7)];bx.fillRect(b.x,b.y,b.w,b.h);});
+    bx.fillStyle='#f3d45b';bx.font='bold 16px Cairo';bx.textAlign='center';bx.fillText('النقاط: '+g.score+'   المحاولات: '+g.lives+'   المرحلة: '+(g.level||1),180,25);
+    g.bricks.forEach(function(b,i){if(!b.on)return;bx.fillStyle=b.color||['#ff6b8a','#ffa94d','#65d98b','#57b9ff','#b48aff','#f3d45b'][Math.floor(i/7)];bx.fillRect(b.x,b.y,b.w,b.h);if(b.hp>1){bx.strokeStyle='#fff';bx.lineWidth=2;bx.strokeRect(b.x+2,b.y+2,b.w-4,b.h-4);}});
     bx.fillStyle='#f5f0ff';bx.fillRect(g.px,478,g.p,10);
     bx.beginPath();bx.arc(g.x,g.y,g.r,0,Math.PI*2);bx.fillStyle='#fff';bx.fill();
     if(!brickPaused){
       g.x+=g.dx;g.y+=g.dy;
       if(g.x<g.r||g.x>360-g.r)g.dx*=-1;
       if(g.y<35)g.dy=Math.abs(g.dy);
-      if(g.y+g.r>=478&&g.x>=g.px&&g.x<=g.px+g.p&&g.dy>0){g.dy=-Math.abs(g.dy);g.dx+=(g.x-(g.px+g.p/2))/18;}
-      g.bricks.forEach(function(b){if(b.on&&g.x>b.x&&g.x<b.x+b.w&&g.y-g.r<b.y+b.h&&g.y+g.r>b.y){b.on=false;g.dy*=-1;g.score+=10;}});
+      if(g.y+g.r>=478&&g.x>=g.px&&g.x<=g.px+g.p&&g.dy>0){g.dy=-Math.abs(g.dy);g.dx+=(g.x-(g.px+g.p/2))/18;g.dx=Math.max(-5,Math.min(5,g.dx));}
+      g.bricks.forEach(function(b){if(b.on&&g.x>b.x&&g.x<b.x+b.w&&g.y-g.r<b.y+b.h&&g.y+g.r>b.y){if(b.hp){b.hp--;if(!b.hp)b.on=false;}g.dy*=-1;g.score+=10;}});
       if(g.y>530){g.lives--;g.x=180;g.y=430;g.dx=3;g.dy=-3;if(g.lives<=0){brickPaused=true;}}
-      if(g.bricks.every(function(b){return !b.on;})){g.score+=100;g.bricks.forEach(function(b){b.on=true;});g.dy=-Math.abs(g.dy);}
+      if(g.bricks.every(function(b){return !b.on;})){g.score+=100;g.level++;makeBrickLevel();g.x=180;g.y=430;g.dx=2.5+(g.level*.25);g.dy=-3.2-(g.level*.2);$('arcade-help').textContent='أحسنت! وصلت للمرحلة '+g.level;}
       $('arcade-score').textContent='النقاط: '+g.score;
       if(!brickPaused)brickFrame=requestAnimationFrame(drawBrick);
       else {bx.fillStyle='#fff';bx.font='bold 24px Cairo';bx.fillText(g.lives<=0?'انتهت اللعبة!':'أحسنت!',180,270);}
