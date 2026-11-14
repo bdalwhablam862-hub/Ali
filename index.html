@@ -189,6 +189,7 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 .ctrls .open { grid-column: 1 / -1; }
 .wide { width: 100%; }
 .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.game-tiles{display:grid;grid-template-columns:1fr;gap:10px}.game-tile{display:flex;align-items:center;gap:14px;text-align:right;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;width:100%;min-height:82px}.game-tile .game-icon{width:54px;height:54px;display:grid;place-items:center;flex:none;border-radius:14px;background:var(--surface-2);font-size:30px}.game-tile .game-copy{display:flex;flex-direction:column;gap:3px}.game-tile .game-copy b{font-size:17px}.game-tile .game-copy small{color:var(--muted);font-size:13px}.game-tile:active{transform:scale(.99)}
 
 .result { display: flex; flex-direction: column; gap: 10px; text-align: center; }
 .result h2 { font-family: var(--font-display); font-weight: 400; font-size: 32px; line-height: 1.1; margin: 0; color: var(--accent); overflow-wrap: anywhere; }
@@ -256,9 +257,9 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     <section class="mode" id="arcade-menu">
       <h2>🎮 ألعاب إضافية</h2>
       <p>اختار لعبة سريعة والعب مباشرة من علي جيمز.</p>
-      <div class="row2">
-        <button class="btn primary" type="button" id="open-brick">🧱 تكسير الطوب</button>
-        <button class="btn primary" type="button" id="open-block">🟦 بلوك بلست</button>
+      <div class="game-tiles">
+        <button class="game-tile" type="button" id="open-brick"><span class="game-icon">🧱</span><span class="game-copy"><b>تكسير الطوب</b><small>حرّك المضرب وكسّر الطوب واجمع النقاط</small></span></button>
+        <button class="game-tile" type="button" id="open-block"><span class="game-icon">🟦</span><span class="game-copy"><b>بلوك بلست</b><small>ركّب القطع وامسح الصفوف والأعمدة</small></span></button>
       </div>
     </section>
 
