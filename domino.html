@@ -62,7 +62,7 @@ function afterMove(){
 function orient(t,side){
  if(!chain.length)return t.slice();
  const e=ends(),match=side==='left'?e[0]:e[1];
- if(t[0]===match)return t.slice();
+ if((side==='left'&&t[1]===match)||(side==='right'&&t[0]===match))return t.slice();
  return [t[1],t[0]];
 }
 function put(hand,i,side){
