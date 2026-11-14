@@ -69,9 +69,20 @@ main{padding:0;gap:0}
 .side .turnbox{font-size:9px;padding:3px 5px}
 .gameinfo,.panel{margin:10px}
 }
+
+/* أدوات اللعب */
+.tools{position:absolute;top:46px;left:8px;z-index:8;display:flex;gap:5px}
+.tools button{padding:6px 9px;font-size:12px;background:#191923eF}
+.chatbox{position:absolute;z-index:9;left:8px;top:86px;width:min(290px,78vw);background:#171923f2;border:1px solid #555;border-radius:12px;padding:10px;box-shadow:0 8px 25px #0008}
+.chatlog{height:130px;overflow:auto;font-size:12px;line-height:1.7;margin:8px 0}
+.chatbox input{width:100%;background:#090a10;border:1px solid #555;border-radius:8px;padding:8px}
+.quickemojis{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.quickemojis button{padding:4px 8px}
+.board{overflow:auto;scrollbar-width:thin}
+@media(max-width:650px){.tools{top:42px;left:5px}.tools button{font-size:10px;padding:5px 7px}.chatbox{top:78px;left:5px}}
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
-<section class="stage"><div class="playfield">
+<section class="stage"><div class="tools"><button id="chatToggle">💬 الدردشة</button><button id="helpToggle">❔ مساعدة</button><button id="emojiToggle">😊</button></div><div class="chatbox hidden" id="chatBox"><b>دردشة الطاولة</b><div class="chatlog" id="chatLog">ابدأوا اللعب واستمتعوا!<br></div><input id="chatInput" maxlength="120" placeholder="اكتب رسالة واضغط Enter"><div class="quickemojis"><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="👍">👍</button><button data-emoji="🔥">🔥</button><button data-emoji="❤️">❤️</button></div><p class="help">الدردشة الحالية داخل نفس الصفحة؛ الدردشة الحية بين جهازين تحتاج ربط خدمة أونلاين.</p></div><div class="playfield">
 <div class="opponent-hand" id="opponent-hand"></div>
 <div class="board" id="board"><span class="muted">اضغط «العب الآن» لبدء الجولة</span></div>
 <div><div class="hand" id="hand"></div><div class="row" style="justify-content:center;margin-top:8px"><button class="primary" id="drawBtn" disabled>اسحب قطعة</button><button id="passBtn" disabled>عدّي الدور</button><button id="newBtn">لعبة جديدة</button></div></div>
@@ -180,6 +191,12 @@ $('playNow').onclick=()=>{start();document.querySelector('.stage').scrollIntoVie
 $('newBtn').onclick=start;
 $('hand').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b)play(Number(b.dataset.i))});
 $('drawBtn').onclick=draw;$('passBtn').onclick=pass;
+$('chatToggle').onclick=()=> $('chatBox').classList.toggle('hidden');
+$('emojiToggle').onclick=()=>{ $('chatBox').classList.remove('hidden'); $('chatInput').value+='😊'; $('chatInput').focus(); };
+$('helpToggle').onclick=()=>alert('طريقة اللعب: ضع قطعة لها نفس رقم أحد طرفي السلسلة. إذا لم تجد قطعة مناسبة اسحب من الرصيد. إذا انتهى السحب ولم تستطع اللعب، عدّي الدور. الفائز هو أول من ينهي قطعه، أو الأقل نقاطًا عند إغلاق اللعب.');
+function sendChat(v){const s=String(v||'').trim();if(!s)return;const line=document.createElement('div');line.textContent='أنت: '+s;$('chatLog').appendChild(line);$('chatLog').scrollTop=$('chatLog').scrollHeight;$('chatInput').value='';}
+$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat(e.target.value)});
+document.querySelectorAll('[data-emoji]').forEach(b=>b.onclick=()=>sendChat(b.dataset.emoji));
 $('onlinePanel').classList.remove('hidden');
 render();
 })();
