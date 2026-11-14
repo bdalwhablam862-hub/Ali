@@ -56,7 +56,7 @@ main{max-width:560px;gap:16px}
 #block-board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;width:min(100%,420px);aspect-ratio:1;margin:8px auto;padding:7px;background:#1a2540;border:2px solid #60749a;border-radius:14px}
 .block-cell{min-width:0;aspect-ratio:1;border:1px solid #354666;border-radius:5px;background:#263653;padding:0}
 .block-cell.filled{background:linear-gradient(145deg,#58c9ff,#3973e8);border-color:#a9e8ff;box-shadow:inset 0 2px 4px #ffffff55,0 2px 5px #0005}
-#block-pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center;margin:12px 0}
+#embabi-wrap .mode{margin-top:10px}#em-photo img{width:100%;height:100%;object-fit:contain}#em-finish{margin-top:12px}#block-pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center;margin:12px 0}
 .block-piece{min-height:94px;display:grid;grid-template-columns:repeat(5,13px);grid-auto-rows:13px;gap:3px;align-content:center;justify-content:center;background:#202c49;border:2px solid #465b82;border-radius:12px;padding:8px;cursor:grab}
 .block-piece span{background:linear-gradient(145deg,#ffcf55,#f28b38);border-radius:3px;box-shadow:inset 0 1px 2px #fff8}
 .block-piece span.empty{visibility:hidden}.block-piece.selected{border-color:#ffe45e;background:#3b3a48;transform:translateY(-2px)}.block-piece:disabled{opacity:.2}
@@ -267,6 +267,7 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
       <h2>🎮 ألعاب إضافية</h2>
       <p>اختار لعبة سريعة والعب مباشرة من علي جيمز.</p>
       <div class="game-tiles">
+        <button class="game-tile" type="button" id="open-embabi"><span class="game-icon">⚽</span><span class="game-copy"><b>مزاد إمبابي</b><small>Classic وPro Max ومزايدة 30 ثانية</small></span></button>
         <button class="game-tile" type="button" id="open-brick"><span class="game-icon">🧱</span><span class="game-copy"><b>تكسير الطوب</b><small>حرّك المضرب وكسّر الطوب واجمع النقاط</small></span></button>
         <button class="game-tile" type="button" id="open-block"><span class="game-icon">🟦</span><span class="game-copy"><b>بلوك بلست</b><small>ركّب القطع وامسح الصفوف والأعمدة</small></span></button>
       </div>
@@ -275,6 +276,40 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     <section class="mode" id="arcade" hidden>
       <div class="side-h"><h2 id="arcade-title">الألعاب</h2><button class="menu-btn" id="arcade-back" type="button">رجوع</button></div>
       <div class="side-h"><span class="legend" id="arcade-help">اختار لعبة</span><b class="pinfo" id="arcade-score">النقاط: 0</b></div>
+      <div id="embabi-wrap" hidden>
+        <div class="mode">
+          <h2>مزاد إمبابي</h2>
+          <p>اختار نمط اللعب ونافس الكمبيوتر في مزاد بميزانية 100 مليون يورو.</p>
+          <div class="seg">
+            <input type="radio" name="embabi-mode" id="em-classic" value="classic" checked><label for="em-classic">Classic · 5</label>
+            <input type="radio" name="embabi-mode" id="em-pro" value="pro"><label for="em-pro">Pro Max · 11</label>
+          </div>
+          <label class="field"><span>اسم فريقك</span><input type="text" id="em-name" maxlength="16" value="فريقي"></label>
+          <button class="btn primary wide" id="em-start" type="button">ابدأ المزاد</button>
+        </div>
+        <div id="em-play" hidden>
+          <div class="row2">
+            <div class="res-box"><div class="t" id="em-you-label">فريقي</div><div class="n" id="em-you-budget">100M€</div><div class="s" id="em-you-count">0 / 5</div></div>
+            <div class="res-box"><div class="t">الكمبيوتر</div><div class="n" id="em-cpu-budget">100M€</div><div class="s" id="em-cpu-count">0 / 5</div></div>
+          </div>
+          <div class="auction">
+            <div class="card"><div class="badge gold"><b id="em-rating">--</b><span class="ini" id="em-photo">⚽</span><i id="em-pos">--</i></div><div><div class="pname" id="em-player">استعد للمزاد</div><div class="pmeta" id="em-meta"></div></div></div>
+            <div class="offer"><span class="olbl">السعر الحالي</span><span class="oval" id="em-price">0M€</span></div>
+            <div class="ofull" id="em-clock">30</div><div class="bar"><i id="em-timebar"></i></div>
+            <div class="status" id="em-status">زايد عشان تكسب اللاعب!</div>
+            <div class="ctrls"><button class="btn primary" id="em-bid1">+1M</button><button class="btn" id="em-bid3">+3M</button><button class="btn" id="em-bid5">+5M</button><button class="btn" id="em-pass">انسحب</button></div>
+          </div>
+          <div class="mode"><h2>تشكيلتك</h2><div id="em-squad" class="legend"></div></div>
+          <div class="mode" id="em-finish" hidden>
+            <h2>اختار المدرب والبطاقة التكتيكية</h2>
+            <div class="seg"><input type="radio" name="em-coach" id="em-coach-a" value="attack" checked><label for="em-coach-a">هجومي</label><input type="radio" name="em-coach" id="em-coach-b" value="balanced"><label for="em-coach-b">متوازن</label><input type="radio" name="em-coach" id="em-coach-c" value="defense"><label for="em-coach-c">دفاعي</label></div>
+            <div class="seg"><input type="radio" name="em-card" id="em-card-a" value="boost" checked><label for="em-card-a">دفعة قوة</label><input type="radio" name="em-card" id="em-card-b" value="wall"><label for="em-card-b">جدار دفاعي</label><input type="radio" name="em-card" id="em-card-c" value="focus"><label for="em-card-c">تركيز</label></div>
+            <button class="btn primary wide" id="em-simulate" type="button">ابدأ محاكاة المباراة</button>
+            <div class="result" id="em-result" hidden></div>
+          </div>
+          <button class="btn wide" id="em-again" type="button">لعبة جديدة</button>
+        </div>
+      </div>
       <div id="brick-wrap" hidden>
         <canvas id="brick-canvas" width="360" height="520" aria-label="لعبة تكسير الطوب"></canvas>
         <div class="row2"><button class="btn primary" id="brick-start" type="button">ابدأ / العب من جديد</button><button class="btn" id="brick-pause" type="button">إيقاف مؤقت</button></div>
@@ -1035,15 +1070,141 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     $('arcade-menu').hidden = true;
     $('brick-wrap').hidden = which !== 'brick';
     $('block-wrap').hidden = which !== 'block';
-    $('arcade-title').textContent = which === 'brick' ? '🧱 تكسير الطوب' : '🟦 بلوك بلست';
-    $('arcade-help').textContent = which === 'brick' ? 'حرّك المضرب لصد الكرة' : 'اختار قطعة ثم مكانها على الشبكة';
+    $('embabi-wrap').hidden = which !== 'embabi';
+    $('arcade-title').textContent = which === 'brick' ? '🧱 تكسير الطوب' : which === 'block' ? '🟦 بلوك بلست' : '⚽ مزاد إمبابي';
+    $('arcade-help').textContent = which === 'brick' ? 'حرّك المضرب لصد الكرة' : which === 'block' ? 'اختار قطعة ثم مكانها على الشبكة' : 'مزاد كرة قدم ضد الكمبيوتر';
     if (which === 'brick') startBrick();
-    else newBlockGame();
+    else if (which === 'block') newBlockGame();
+    else showEmbabiSetup();
   }
   $('open-brick').addEventListener('click', function(){showArcade('brick');});
+  $('open-embabi').addEventListener('click', function(){showArcade('embabi');});
   $('open-block').addEventListener('click', function(){showArcade('block');});
   $('arcade-back').addEventListener('click', function(){
-    stopBrick(); $('arcade').hidden=true; $('arcade-menu').hidden=false;
+    stopBrick(); stopEmbabi(); $('arcade').hidden=true; $('arcade-menu').hidden=false;
+  });
+
+
+  // Embabi-inspired football auction mode. Online rooms/voice require a server;
+  // this self-contained version supports a complete local match against CPU.
+  var EM = null, emTimer = null, emTick = null;
+  var EM_POS = { GK:'حارس', FB:'ظهير', CB:'قلب دفاع', MF:'وسط', FW:'هجوم' };
+  var EM_CLASSIC = ['GK','CB','MF','MF','FW'];
+  var EM_PRO = ['GK','FB','FB','CB','CB','CB','MF','MF','MF','FW','FW'];
+  function stopEmbabi(){ if(emTimer){clearInterval(emTimer);emTimer=null;} }
+  function showEmbabiSetup(){
+    stopEmbabi(); $('em-play').hidden=true;
+    $('em-start').disabled=false;
+  }
+  function emPick(pos, used){
+    var list=POOL.filter(function(p){return p.pos===pos && !used[p.name];});
+    if(!list.length) list=POOL.filter(function(p){return p.pos===pos;});
+    return list[Math.floor(Math.random()*list.length)] || {name:'لاعب احتياطي',pos:pos,rating:70,club:'',photo:''};
+  }
+  function emTeam(name){return {name:name,budget:100,players:[],score:0};}
+  function emStart(){
+    stopEmbabi();
+    var mode=document.querySelector('input[name="embabi-mode"]:checked').value;
+    var slots=mode==='classic'?EM_CLASSIC.slice():EM_PRO.slice();
+    var used={};
+    EM={mode:mode,slots:slots,round:0,current:null,price:0,leader:null,seconds:30,passed:false,done:false,
+      you:emTeam(($('em-name').value||'فريقي').trim().slice(0,16)||'فريقي'),cpu:emTeam('الكمبيوتر'),order:[]};
+    slots.forEach(function(pos){var p=emPick(pos,used);used[p.name]=true;EM.order.push(p);});
+    EM.order=EM.order.concat(EM.order.slice()); // each position gets a second candidate when needed
+    $('em-play').hidden=false;$('em-finish').hidden=true;$('em-result').hidden=true;
+    $('em-you-label').textContent=EM.you.name;
+    $('em-start').disabled=true;
+    emNext();
+  }
+  function emRender(){
+    if(!EM)return;
+    $('em-you-budget').textContent=EM.you.budget.toFixed(1)+'M€';
+    $('em-cpu-budget').textContent=EM.cpu.budget.toFixed(1)+'M€';
+    $('em-you-count').textContent=EM.you.players.length+' / '+EM.slots.length;
+    $('em-cpu-count').textContent=EM.cpu.players.length+' / '+EM.slots.length;
+    $('em-price').textContent=EM.price.toFixed(1)+'M€';
+    $('em-clock').textContent=Math.max(0,Math.ceil(EM.seconds));
+    $('em-timebar').style.width=(Math.max(0,EM.seconds)/30*100)+'%';
+    var p=EM.current;
+    if(p){
+      $('em-player').textContent=p.name;$('em-rating').textContent=p.rating;
+      $('em-pos').textContent=EM_POS[p.pos]||p.pos;
+      $('em-meta').textContent=(p.club||'لاعب كرة قدم')+' · تقييم '+p.rating;
+      $('em-photo').innerHTML=p.photo?'<img alt="" src="'+p.photo+'">':'⚽';
+    }
+    $('em-squad').textContent=EM.you.players.map(function(p){return p.name+' ('+(EM_POS[p.pos]||p.pos)+')';}).join(' · ')||'لسه ما اشتريتش لاعبين';
+    var disabled=EM.done||!EM.current||EM.passed||EM.you.players.length>=EM.slots.length;
+    ['em-bid1','em-bid3','em-bid5','em-pass'].forEach(function(id){$(id).disabled=disabled;});
+  }
+  function emNext(){
+    if(EM.you.players.length>=EM.slots.length && EM.cpu.players.length>=EM.slots.length){emComplete();return;}
+    var p=EM.order[EM.round%EM.order.length];
+    var filled=EM.you.players.concat(EM.cpu.players).filter(function(x){return x.pos===p.pos;}).length;
+    if(filled>=EM.slots.filter(function(x){return x===p.pos;}).length*2){EM.round++;if(EM.round>EM.order.length*2){emComplete();return;}return emNext();}
+    EM.current=p;EM.price=Math.max(1,Math.round((p.rating-65)/6));EM.leader=null;EM.passed=false;EM.seconds=30;
+    $('em-status').textContent='المزايدة بدأت — 30 ثانية';
+    emRender();stopEmbabi();
+    emTimer=setInterval(function(){
+      if(!EM||EM.done)return;
+      EM.seconds-=1;
+      if(EM.seconds<=0){stopEmbabi();emResolve();}
+      else {
+        if(!EM.passed && !EM.leader && Math.random()<0.17 && EM.cpu.budget>EM.price+2 && EM.cpu.players.length<EM.slots.length){EM.leader='cpu';EM.price+=1+Math.floor(Math.random()*3);$('em-status').textContent='الكمبيوتر رفع المزايدة!';}
+        else if(EM.leader==='you' && Math.random()<0.12){EM.leader='cpu';EM.price+=1;}
+        emRender();
+      }
+    },1000);
+  }
+  function emBid(amount){
+    if(!EM||EM.done||EM.passed||!EM.current)return;
+    var next=EM.price+amount;
+    if(next>EM.you.budget){$('em-status').textContent='ميزانيتك مش كفاية للعرض ده';return;}
+    EM.price=next;EM.leader='you';$('em-status').textContent='أنت صاحب أعلى عرض حاليًا';emRender();
+  }
+  function emPass(){if(!EM||EM.done)return;EM.passed=true;$('em-status').textContent='انسحبت من المزايدة — ممكن تكسب لاعب خفي';emRender();}
+  function emResolve(){
+    if(!EM||EM.done)return;
+    var pos=EM.current.pos, used={};
+    EM.you.players.concat(EM.cpu.players).forEach(function(p){used[p.name]=true;});
+    var winner=EM.leader==='you'?'you':EM.leader==='cpu'?'cpu':(Math.random()<.5?'you':'cpu');
+    var loser=winner==='you'?'cpu':'you';
+    var winTeam=EM[winner],loseTeam=EM[loser];
+    if(winTeam.players.length<EM.slots.length && winTeam.budget>=EM.price){
+      winTeam.players.push(EM.current);winTeam.budget-=EM.price;
+    }else winner=loser;
+    var mystery=emPick(pos,used);
+    if(loseTeam.players.length<EM.slots.length)loseTeam.players.push({name:'لاعب خفي: '+mystery.name,pos:pos,rating:Math.max(72,mystery.rating-3),club:'Mystery',photo:''});
+    $('em-status').textContent=(winner==='you'?EM.you.name:'الكمبيوتر')+' كسب المزاد، والخصم حصل على لاعب خفي!';
+    EM.round++;emRender();
+    setTimeout(function(){if(EM&&!EM.done)emNext();},1500);
+  }
+  function emComplete(){
+    stopEmbabi();if(!EM)return;EM.done=true;
+    function avg(t){return t.players.reduce(function(a,p){return a+p.rating;},0)/Math.max(1,t.players.length);}
+    var coach=document.querySelector('input[name="em-coach"]:checked').value;
+    var card=document.querySelector('input[name="em-card"]:checked').value;
+    var bonus=(coach==='attack'?2:coach==='defense'?1:1)+(card==='boost'?3:card==='wall'?2:1);
+    var you=avg(EM.you)+bonus+Math.random()*5, cpu=avg(EM.cpu)+2+Math.random()*5;
+    $('em-finish').hidden=false;$('em-status').textContent='اكتملت التشكيلتان! اختار تكتيكك.';
+    $('em-result').hidden=true;emRender();
+    EM.finalScores={you:you,cpu:cpu};
+  }
+  $('em-start').addEventListener('click',emStart);
+  $('em-bid1').addEventListener('click',function(){emBid(1);});
+  $('em-bid3').addEventListener('click',function(){emBid(3);});
+  $('em-bid5').addEventListener('click',function(){emBid(5);});
+  $('em-pass').addEventListener('click',emPass);
+  $('em-again').addEventListener('click',function(){showEmbabiSetup();});
+  $('em-simulate').addEventListener('click',function(){
+    if(!EM||!EM.finalScores)return;
+    var coach=document.querySelector('input[name="em-coach"]:checked').value;
+    var card=document.querySelector('input[name="em-card"]:checked').value;
+    var bonus=(coach==='attack'?2:coach==='defense'?1:1)+(card==='boost'?3:card==='wall'?2:1);
+    var you=EM.finalScores.you+bonus/2, cpu=EM.finalScores.cpu;
+    var winner=you>cpu?EM.you.name:you<cpu?'الكمبيوتر':'تعادل';
+    $('em-result').hidden=false;
+    $('em-result').innerHTML='<h2>'+(winner==='تعادل'?'تعادل!':winner+' فاز!')+'</h2><div class="res-grid"><div class="res-box"><div class="t">'+EM.you.name+'</div><div class="n">'+you.toFixed(1)+'</div><div class="s">قوة الفريق</div></div><div class="res-box"><div class="t">الكمبيوتر</div><div class="n">'+cpu.toFixed(1)+'</div><div class="s">قوة الفريق</div></div></div><p class="legend">نتيجة محاكاة تجريبية تعتمد على تقييم اللاعبين والتكتيك.</p>';
+    $('em-simulate').disabled=true;
   });
 
   // Brick breaker
