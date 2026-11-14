@@ -22,58 +22,109 @@ main{max-width:1180px;margin:auto;padding:8px 10px 30px;display:grid;gap:12px}.t
 <div class="player"><div class="avatar">😎</div><div><b id="youLabel">يدك</b><small class="muted">أنت</small></div><span class="score" id="youCount">7</span></div>
 <div class="stat">قطع السحب<b id="stockCount">14</b></div><div class="turnbox" id="turnLabel">دورك</div><div class="muted" id="turnInfo">ابدأ اللعب</div>
 </aside></section>
-<section class="gameinfo"><div class="gameicon">🁣</div><div class="gamedesc"><h2>Domino Duel</h2><div class="rating">⭐ 4.8/5 &nbsp; · &nbsp; دومينو كلاسيك</div><div class="actions"><button class="primary" id="playNow">♟ العب الآن!</button><button class="greenbtn" id="playFriends">👥 العب مع الأصدقاء</button></div></div></section>
+<section class="gameinfo"><div class="gameicon">🁣</div><div class="gamedesc"><h2>Domino Duel</h2><div class="rating">⭐ 4.8/5 &nbsp; · &nbsp; دومينو كلاسيك</div><div class="actions"><button class="primary" id="playNow">♟ العب الآن!</button></div></div></section>
 <section class="panel"><div class="section-title">طريقة اللعب</div><div class="help">ركّب قطع الدومينو المتشابهة من الطرفين، وحاول تخلّص كل القطع اللي في إيدك قبل خصمك. لو مفيش قطعة مناسبة اسحب أو عدّي الدور.</div><div class="notice" id="notice" aria-live="polite"></div></section>
 <section class="panel hidden" id="onlinePanel"><b>غرف الدومينو</b><p class="help">أنشئ غرفة وابعث الكود لصاحبك. لازم تفضل الصفحة مفتوحة عند اللاعبين طول المباراة.</p><div class="row"><button class="primary" id="createRoom">إنشاء غرفة</button><input class="field" id="joinCode" maxlength="6" placeholder="كود الغرفة" inputmode="text" aria-label="كود الغرفة"><button id="joinRoom">دخول غرفة</button></div><div id="roomInfo" class="help" style="margin-top:10px" aria-live="polite">لم تتصل بغرفة بعد.</div><div id="roomCode" class="roomcode"></div><div class="row"><button id="copyCode" class="hidden">نسخ الكود</button><button id="leaveRoom" class="hidden">الخروج من الغرفة</button></div><div class="row" style="margin-top:10px"><button id="cpuMode">ضد الكمبيوتر</button><button id="onlineMode" class="primary">🌐 أونلاين مع صاحبك</button></div></section>
 </main>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-(function(){
+(()=> {
 const $=id=>document.getElementById(id);
-let you=[],cpu=[],stock=[],chain=[],turn='you',over=false,passes=0,mode='cpu',peer=null,conn=null,isHost=false,room='',myRole='you',onlineReady=false,selected=null;
-function say(s,k){$('notice').textContent=s;$('notice').className='notice '+(k||'')}
-function deck(){let d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b]);return d.sort(()=>Math.random()-.5)}
-function ends(){return chain.length?[chain[0][0],chain[chain.length-1][1]]:[]}
-function can(t){if(!chain.length)return true;let e=ends();return t[0]===e[0]||t[1]===e[0]||t[0]===e[1]||t[1]===e[1]}
-function orient(t,s){let e=ends();if(!chain.length)return t.slice();if(s==='left')return t[1]===e[0]?[...t]:[t[1],t[0]];return t[0]===e[1]?[...t]:[t[1],t[0]]}
-function pipFace(n){const spots={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+spots[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>'}
-function dominoHTML(t){return '<span class="tile">'+pipFace(t[0])+pipFace(t[1])+'</span>'}
-function score(h){return h.reduce((n,t)=>n+t[0]+t[1],0)}
-function snapshot(){return {you,cpu,stock,chain,turn,over,passes}}
-function applySnapshot(s){you=s.you;cpu=s.cpu;stock=s.stock;chain=s.chain;turn=s.turn;over=s.over;passes=s.passes;selected=null;render()}
-function sendState(){if(isHost&&conn&&conn.open)conn.send({type:'state',state:snapshot()})}
+let you=[],cpu=[],stock=[],chain=[],turn='you',over=true,passes=0;
+const say=(s,k='')=>{$('notice').textContent=s;$('notice').className='notice '+k};
+const sum=h=>h.reduce((n,t)=>n+t[0]+t[1],0);
+function deck(){const d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b]);for(let i=d.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]]}return d}
+const ends=()=>chain.length?[chain[0][0],chain[chain.length-1][1]]:[];
+const can=t=>!chain.length||ends().some(n=>t[0]===n||t[1]===n);
+function face(n){const p={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+p[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>'}
+const tile=t=>'<span class="tile">'+face(t[0])+face(t[1])+'</span>';
 function render(){
- const online=mode==='online',mine=online?(myRole==='you'?you:cpu):you,other=online?(myRole==='you'?cpu:you):cpu;
- $('youCount').textContent=mine.length;$('cpuCount').textContent=other.length;$('stockCount').textContent=stock.length;
- $('youLabel').firstChild.textContent=online?'يدك':'يدك';$('opLabel').firstChild.textContent=online?'صاحبك':'الكمبيوتر';
- $('board').innerHTML=(chain.length?chain.map(t=>dominoHTML(t)).join(''):'<span class="muted">الطاولة فاضية — ابدأ بأي قطعة</span>')+'<div class="stock-pile" id="stockPile"><div class="stock-label">رصّة السحب</div>'+(stock.length?Array.from({length:stock.length},()=>'<span class="backtile"></span>').join(''):'<span class="stock-empty">خلصت</span>')+'</div>';
- $('opponent-hand').innerHTML=other.map(()=>'<span class="backtile"></span>').join('');$('hand').innerHTML=mine.map((t,i)=>'<button data-i="'+i+'" '+(over||turn!==myRole||!can(t)?'disabled':'')+'>'+dominoHTML(t)+'</button>').join('');
- $('drawBtn').disabled=over||turn!==myRole||!stock.length||mine.some(can);$('passBtn').disabled=over||turn!==myRole||(stock.length>0&&mine.some(can));
- $('turnInfo').textContent=over?'انتهت الجولة':turn===myRole?'دورك':online?'دور صاحبك':'دور الكمبيوتر';
- $('turnLabel').textContent=over?'انتهت الجولة':turn===myRole?'دورك':'الدور على '+(online?'صاحبك':'الكمبيوتر');
+ $('youCount').textContent=you.length;$('cpuCount').textContent=cpu.length;$('stockCount').textContent=stock.length;
+ $('opponent-hand').innerHTML=cpu.map(()=>'<span class="backtile"></span>').join('');
+ $('hand').innerHTML=you.map((t,i)=>'<button data-i="'+i+'" '+(!over&&turn==='you'&&can(t)?'':'disabled')+'>'+tile(t)+'</button>').join('');
+ $('board').innerHTML=(chain.length?chain.map(tile).join(''):'<span class="muted">ابدأ الجولة</span>')+'<div class="stock-pile"><div class="stock-label">رصّة السحب</div>'+(stock.length?Array.from({length:Math.min(stock.length,14)},()=>'<span class="backtile"></span>').join(''):'<span class="stock-empty">خلصت</span>')+'</div>';
+ $('drawBtn').disabled=over||turn!=='you'||!stock.length||you.some(can);
+ $('passBtn').disabled=over||turn!=='you'||stock.length>0||you.some(can);
+ $('turnLabel').textContent=over?'انتهت الجولة':turn==='you'?'دورك':'دور الكمبيوتر';
+ $('turnInfo').textContent=over?'اضغط لعبة جديدة للبدء':turn==='you'?'اختار قطعة مناسبة أو اسحب':'الكمبيوتر بيفكر...';
 }
-function finish(w,msg){over=true;say(msg+(w==='draw'?'': ' · نقاط اليد المتبقية: '+(w==='you'?score(cpu):score(you))),'good')}
-function nextTurn(){selected=null;passes=0;if(!you.length){finish('you','كسبت الجولة! 🎉');return}if(!cpu.length){finish('cpu',mode==='online'?'صاحبك كسب الجولة':'الكمبيوتر كسب الجولة');return}turn=turn==='you'?'cpu':'you';render();if(mode==='cpu'&&turn==='cpu')setTimeout(cpuTurn,650);else sendState()}
-function put(hand,i,side){let t=hand.splice(i,1)[0];if(!chain.length)chain.push(t);else if(side==='left')chain.unshift(orient(t,'left'));else chain.push(orient(t,'right'));nextTurn()}
-function play(i){if(turn!==myRole||over)return;let hand=myRole==='you'?you:cpu,t=hand[i];if(!t||!can(t))return;let e=ends(),left=!chain.length||t[0]===e[0]||t[1]===e[0];let right=!chain.length||t[0]===e[1]||t[1]===e[1];if(left&&right&&chain.length&&e[0]!==e[1]){say('القطعة تركب من الناحيتين: اختار الطرف','warn');$('notice').insertAdjacentHTML('beforeend',' <button id="leftChoice">الشمال</button> <button id="rightChoice">اليمين</button>');$('leftChoice').onclick=()=>doAction({kind:'play',index:i,side:'left'});$('rightChoice').onclick=()=>doAction({kind:'play',index:i,side:'right'});return}doAction({kind:'play',index:i,side:left?'left':'right'})}
-function doAction(a){
- if(mode==='online'&&!isHost){if(conn&&conn.open)conn.send({type:'action',action:a});else say('الاتصال انقطع','warn');return}
- const h=turn==='you'?you:cpu;
- if(a.kind==='play'){if(a.index<0||a.index>=h.length||!can(h[a.index]))return;put(h,a.index,a.side)}
- else if(a.kind==='draw'){if(!stock.length||h.some(can))return;h.push(stock.pop());render();if(mode==='cpu'&&turn==='cpu')setTimeout(cpuTurn,350)}
- else if(a.kind==='pass'){if(h.some(can)||stock.length)return;passes++;if(passes>=2){let w=score(you)<score(cpu)?'you':score(cpu)<score(you)?'cpu':'draw';finish(w,w==='draw'?'تعادل — الطاولة اتقفلت':w==='you'?'كسبت بالنقاط!':'الخصم كسب بالنقاط');render()}else{turn=turn==='you'?'cpu':'you';render();if(mode==='cpu'&&turn==='cpu')setTimeout(cpuTurn,500)}}
- sendState();
+function endRound(w,msg){
+ over=true;render();
+ if(w==='draw')say(msg+' · تعادل بالنقاط: '+sum(you)+' - '+sum(cpu),'warn');
+ else say(msg+' · نقاطك: '+sum(you)+' | نقاط الخصم: '+sum(cpu),w==='you'?'good':'warn');
 }
-function cpuTurn(){if(over||turn!=='cpu'||mode!=='cpu')return;let opts=cpu.map((t,i)=>({t,i})).filter(x=>can(x.t));if(opts.length){opts.sort((a,b)=>(b.t[0]+b.t[1])-(a.t[0]+a.t[1]));let x=opts[0],e=ends(),side=!chain.length||x.t[0]===e[0]||x.t[1]===e[0]?'left':'right';put(cpu,x.i,side);say('الكمبيوتر لعب قطعة');return}if(stock.length){cpu.push(stock.pop());render();setTimeout(cpuTurn,350);return}passes++;turn='you';render();say('الكمبيوتر عدّى الدور')}
-function startGame(){let d=deck();you=d.splice(0,7);cpu=d.splice(0,7);stock=d;chain=[];over=false;passes=0;selected=null;let starter=null,best=-1;for(const [name,hand] of [['you',you],['cpu',cpu]])for(let i=0;i<hand.length;i++){const t=hand[i],rank=t[0]===t[1]?100+t[0]:t[0]+t[1];if(rank>best){best=rank;starter={name,hand,index:i,t}}}if(starter){starter.hand.splice(starter.index,1);chain=[starter.t.slice()];turn=starter.name}else turn='you';render();say(turn==='you'?'أعلى قطعة بدأت الجولة — دورك':'أعلى قطعة بدأت الجولة — دور الخصم','good');if(mode==='online'&&isHost)sendState();if(mode==='cpu'&&turn==='cpu')setTimeout(cpuTurn,650)}
-function cleanup(){onlineReady=false;if(conn){try{conn.close()}catch(e){}conn=null}if(peer){try{peer.destroy()}catch(e){}peer=null}room='';$('roomCode').textContent='';$('roomInfo').textContent='خرجت من الغرفة.';$('copyCode').classList.add('hidden');$('leaveRoom').classList.add('hidden')}
-function setOnline(on){if(on){mode='online';$('onlinePanel').classList.remove('hidden');myRole='you';$('cpuMode').classList.remove('primary');$('onlineMode').classList.add('primary');$('newBtn').textContent='جولة جديدة';say('أنشئ غرفة أو ادخل بكود صاحبك')}else{cleanup();mode='cpu';$('onlinePanel').classList.add('hidden');$('cpuMode').classList.add('primary');$('onlineMode').classList.remove('primary');startGame()}}
-function roomCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
-function createRoom(){cleanup();mode='online';isHost=true;myRole='you';room=roomCode();$('roomInfo').textContent='جاري إنشاء الغرفة...';peer=new Peer('ali-domino-'+room.toLowerCase());peer.on('open',()=>{$('roomInfo').textContent='الغرفة جاهزة. ابعت الكود لصاحبك وانتظر دخوله.';$('roomCode').textContent=room;$('copyCode').classList.remove('hidden');$('leaveRoom').classList.remove('hidden');startGame()});peer.on('connection',c=>{if(conn){c.close();return}conn=c;conn.on('open',()=>{onlineReady=true;$('roomInfo').textContent='صاحبك دخل الغرفة! ابدأوا اللعب.';$('leaveRoom').classList.remove('hidden');sendState()});conn.on('data',m=>{if(m&&m.type==='action'&&isHost&&onlineReady){if(turn==='cpu')doAction(m.action)}});conn.on('close',()=>{$('roomInfo').textContent='صاحبك خرج من الغرفة.';onlineReady=false})});peer.on('error',e=>{$('roomInfo').textContent=e.type==='unavailable-id'?'الكود مستخدم، اخرج وأنشئ غرفة جديدة.':'تعذر الاتصال: '+e.type+' — جرّب مرة أخرى.'})}
-function joinRoom(){let code=$('joinCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){$('roomInfo').textContent='اكتب كود من 6 حروف أو أرقام.';return}cleanup();mode='online';isHost=false;myRole='cpu';room=code;$('roomInfo').textContent='جاري الاتصال بالغرفة...';peer=new Peer();peer.on('open',()=>{conn=peer.connect('ali-domino-'+room.toLowerCase(),{reliable:true});conn.on('open',()=>{$('roomInfo').textContent='اتصلت بالغرفة! مستني بيانات اللعبة...';$('leaveRoom').classList.remove('hidden')});conn.on('data',m=>{if(m&&m.type==='state'){onlineReady=true;applySnapshot(m.state);$('roomInfo').textContent='متصل بالغرفة '+room+' · اللعب مباشر';$('roomCode').textContent=room;$('leaveRoom').classList.remove('hidden')}});conn.on('close',()=>{$('roomInfo').textContent='انقطع اتصال صاحب الغرفة.';onlineReady=false})});peer.on('error',e=>{$('roomInfo').textContent='لم نقدر نوصل للغرفة: '+e.type})}
-$('cpuMode').onclick=()=>setOnline(false);$('onlineMode').onclick=()=>setOnline(true);$('playNow').onclick=()=>{setOnline(false);startGame();document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'center'})};$('playFriends').onclick=()=>{setOnline(true);$('onlinePanel').classList.remove('hidden');$('onlinePanel').scrollIntoView({behavior:'smooth',block:'center'})};$('createRoom').onclick=createRoom;$('joinRoom').onclick=joinRoom;$('leaveRoom').onclick=()=>{cleanup();say('تم الخروج من الغرفة')};$('copyCode').onclick=()=>{if(room&&navigator.clipboard)navigator.clipboard.writeText(room).then(()=>$('roomInfo').textContent='تم نسخ الكود '+room).catch(()=>say('انسخ الكود يدويًا'))};$('newBtn').onclick=()=>{if(mode==='online'){if(isHost&&onlineReady)startGame();else say('صاحب الغرفة هو اللي يبدأ جولة جديدة')}else startGame()};
-$('hand').addEventListener('click',e=>{let b=e.target.closest('button[data-i]');if(b)play(Number(b.dataset.i))});
-$('drawBtn').onclick=()=>doAction({kind:'draw'});$('passBtn').onclick=()=>doAction({kind:'pass'});
+function afterMove(){
+ passes=0;
+ if(!you.length){endRound('you','كسبت الجولة! 🎉');return}
+ if(!cpu.length){endRound('cpu','الكمبيوتر كسب الجولة');return}
+ turn=turn==='you'?'cpu':'you';render();
+ if(turn==='cpu')setTimeout(cpuTurn,650);
+}
+function orient(t,side){
+ if(!chain.length)return t.slice();
+ const e=ends(),match=side==='left'?e[0]:e[1];
+ if(t[0]===match)return t.slice();
+ return [t[1],t[0]];
+}
+function put(hand,i,side){
+ const t=hand.splice(i,1)[0],v=orient(t,side);
+ if(!chain.length)chain.push(v);else if(side==='left')chain.unshift(v);else chain.push(v);
+ afterMove();
+}
+function play(i){
+ if(over||turn!=='you')return;
+ const t=you[i];if(!t||!can(t))return;
+ if(!chain.length){put(you,i,'right');return}
+ const e=ends(),left=t.includes(e[0]),right=t.includes(e[1]);
+ if(left&&right&&e[0]!==e[1]){
+  say('القطعة تنفع من الناحيتين — اختار مكانها','warn');
+  $('notice').insertAdjacentHTML('beforeend',' <button id="leftChoice">الشمال</button> <button id="rightChoice">اليمين</button>');
+  $('leftChoice').onclick=()=>put(you,i,'left');$('rightChoice').onclick=()=>put(you,i,'right');return;
+ }
+ put(you,i,left?'left':'right');
+}
+function draw(){
+ if(over||turn!=='you'||!stock.length||you.some(can))return;
+ you.push(stock.pop());render();say('سحبت قطعة. لو تنفع العبها، ولو لسه مش نافعة اسحب تاني.','');
+}
+function pass(){
+ if(over||turn!=='you'||stock.length||you.some(can))return;
+ passes++;if(passes>=2){blocked();return}
+ turn='cpu';render();setTimeout(cpuTurn,450);
+}
+function blocked(){
+ const a=sum(you),b=sum(cpu);
+ if(a===b)endRound('draw','اللعبة اتقفلت');else endRound(a<b?'you':'cpu',a<b?'كسبت بالنقاط!':'الكمبيوتر كسب بالنقاط');
+}
+function cpuTurn(){
+ if(over||turn!=='cpu')return;
+ const opts=cpu.map((t,i)=>({t,i})).filter(x=>can(x.t));
+ if(opts.length){
+  opts.sort((a,b)=>((b.t[0]===b.t[1]?20:0)+b.t[0]+b.t[1])-((a.t[0]===a.t[1]?20:0)+a.t[0]+a.t[1]));
+  const x=opts[0],e=ends(),side=!chain.length||x.t.includes(e[0])?'left':'right';
+  put(cpu,x.i,side);say('الكمبيوتر لعب قطعة');return;
+ }
+ if(stock.length){cpu.push(stock.pop());render();setTimeout(cpuTurn,450);return}
+ passes++;if(passes>=2){blocked();return}
+ turn='you';render();say('الكمبيوتر عدّى الدور — دورك','warn');
+}
+function start(){
+ const d=deck();you=d.splice(0,7);cpu=d.splice(0,7);stock=d;chain=[];passes=0;over=false;
+ let best=null;
+ for(const [who,h] of [['you',you],['cpu',cpu]])for(let i=0;i<h.length;i++){
+  const t=h[i],rank=(t[0]===t[1]?100+t[0]:t[0]+t[1]);
+  if(!best||rank>best.rank)best={who,h,i,t,rank};
+ }
+ if(best){best.h.splice(best.i,1);chain.push(best.t.slice());turn=best.who}
+ render();say(turn==='you'?'أعلى قطعة بدأت الجولة — دورك!':'أعلى قطعة بدأت الجولة — الكمبيوتر هيبدأ','good');
+ if(turn==='cpu')setTimeout(cpuTurn,650);
+}
+$('playNow').onclick=()=>{start();document.querySelector('.stage').scrollIntoView({behavior:'smooth',block:'center'})};
+$('newBtn').onclick=start;
+$('hand').addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b)play(Number(b.dataset.i))});
+$('drawBtn').onclick=draw;$('passBtn').onclick=pass;
+$('playFriends').style.display='none';
+$('onlinePanel').classList.add('hidden');
 render();
 })();
-</script></body></html>
+</script>
+</body></html>
