@@ -216,7 +216,34 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 
   <!-- Home page -->
   <section class="home" id="home">
-    <h1 class="brand">علي جيمز<small>مزاد اللاعيبة: 200M وفريق من ١١ لاعب</small></h1>
+    <div class="cg-home" dir="rtl">
+  <header class="cg-header">
+    <div class="cg-logo"><span class="cg-mark">A</span><span>ALI <b>GAMES</b></span></div>
+    <div class="cg-header-actions"><button type="button" onclick="document.getElementById('cg-search').focus()">⌕ <span>بحث</span></button><button type="button" onclick="document.getElementById('cg-library').scrollIntoView({behavior:'smooth'})">♙ <span>ألعابي</span></button></div>
+  </header>
+  <div class="cg-cats"><button class="active" data-filter="all">الكل</button><button data-filter="sports">رياضة ⚽</button><button data-filter="board">ألعاب الطاولة 🎲</button><button data-filter="arcade">أركيد 🎮</button><button data-filter="puzzle">ذكاء 🧩</button></div>
+  <label class="cg-search">⌕ <input id="cg-search" type="search" placeholder="ابحث عن لعبة..."></label>
+  <section class="cg-section">
+    <div class="cg-title"><h2>أفضل الاختيارات لك</h2><span>ألعاب تستحق التجربة</span></div>
+    <div class="cg-feature-grid">
+      <button class="cg-feature feature-domino" data-game="domino" onclick="location.href='domino.html'"><span class="cg-tag">الأكثر لعبًا</span><span class="cg-art">⚄</span><span class="cg-feature-copy"><b>دومينو أونلاين</b><small>العب مع أصحابك أو ضد الكمبيوتر</small><i>العب الآن ←</i></span></button>
+      <button class="cg-feature feature-foot" data-game="sports" onclick="document.getElementById('go-cpu').click()"><span class="cg-tag">لعبة مميزة</span><span class="cg-art">🏆</span><span class="cg-feature-copy"><b>مزاد نجوم الكرة</b><small>كوّن فريق الأحلام ونافس الكمبيوتر</small><i>العب الآن ←</i></span></button>
+    </div>
+  </section>
+  <section class="cg-section" id="cg-library">
+    <div class="cg-title"><h2>كل الألعاب</h2><span id="cg-count">5 ألعاب</span></div>
+    <div class="cg-games">
+      <button class="cg-game" data-game="domino" onclick="location.href='domino.html'"><span class="cg-thumb thumb-domino">⚄</span><b>دومينو</b><small>طاولة · أونلاين</small></button>
+      <button class="cg-game" data-game="sports" onclick="document.getElementById('go-cpu').click()"><span class="cg-thumb thumb-foot">⚽</span><b>مزاد نجوم الكرة</b><small>رياضة · استراتيجية</small></button>
+      <button class="cg-game" data-game="arcade" onclick="document.getElementById('open-embabi').click()"><span class="cg-thumb thumb-embabi">🏟️</span><b>مزاد إمبابي</b><small>رياضة · أركيد</small></button>
+      <button class="cg-game" data-game="arcade" onclick="document.getElementById('open-brick').click()"><span class="cg-thumb thumb-brick">🧱</span><b>تكسير الطوب</b><small>أركيد · مهارة</small></button>
+      <button class="cg-game" data-game="puzzle" onclick="document.getElementById('open-block').click()"><span class="cg-thumb thumb-block">🟦</span><b>بلوك بلست</b><small>ذكاء · ألغاز</small></button>
+    </div>
+    <p class="cg-empty" hidden>مفيش ألعاب مطابقة للبحث ده.</p>
+  </section>
+  <footer class="cg-footer"><span>⌂<small>الرئيسية</small></span><span>☆<small>المفضلة</small></span><span>⌕<small>البحث</small></span><span>🎮<small>ألعابي</small></span></footer>
+</div>
+<h1 class="brand">علي جيمز<small>مزاد اللاعيبة: 200M وفريق من ١١ لاعب</small></h1>
 
     <div class="mode">
       <h2>نوع اللاعيبة</h2>
@@ -1287,5 +1314,21 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 })();
 </script>
 
-</body>
+
+<script>
+(function(){
+ const search=document.getElementById('cg-search');
+ const cards=[...document.querySelectorAll('.cg-game,.cg-feature')];
+ const cats=[...document.querySelectorAll('.cg-cats button')];
+ let category='all';
+ function filter(){
+  const q=(search.value||'').trim().toLowerCase();let shown=0;
+  cards.forEach(el=>{const game=el.dataset.game||'';const matchCat=category==='all'||game===category||(category==='board'&&game==='domino')||(category==='sports'&&game==='sports')||(category==='arcade'&&game==='arcade')||(category==='puzzle'&&game==='puzzle');const matchText=!q||el.innerText.toLowerCase().includes(q);el.style.display=matchCat&&matchText?'':'none';if(matchCat&&matchText&&el.classList.contains('cg-game'))shown++;});
+  document.getElementById('cg-count').textContent=shown+' ألعاب';
+  document.querySelector('.cg-empty').hidden=shown>0;
+ }
+ search.addEventListener('input',filter);
+ cats.forEach(b=>b.addEventListener('click',()=>{cats.forEach(x=>x.classList.remove('active'));b.classList.add('active');category=b.dataset.filter;filter();}));
+})();
+</script></body>
 </html>
