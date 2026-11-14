@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://bdalwhablam862-hub.github.io/Ali/sitemap.xml
