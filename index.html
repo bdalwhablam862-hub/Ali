@@ -181,7 +181,8 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 .card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; }
 .badge { width: 88px; padding: 8px 0 6px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--reserve); color: #1a1226; border: 2px solid rgba(255,255,255,0.6); }
 .badge b { font-family: var(--font-display); font-size: 38px; line-height: 1; font-weight: 400; }
-.badge .ini { width: 70px; height: 92px; border-radius: 9px; overflow: hidden; background: rgba(26,18,38,0.14); background-size: contain; background-position: center; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }\n.badge .ini img { width:100%; height:100%; display:block; object-fit:contain; object-position:center; border-radius:8px; background:rgba(255,255,255,.08); }
+.badge .ini { width: 70px; height: 92px; border-radius: 9px; overflow: hidden; background: rgba(26,18,38,0.14); background-size: contain; background-position: center; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+.badge .ini img { width:100%; height:100%; display:block; object-fit:contain; object-position:center; border-radius:8px; background:rgba(255,255,255,.08); }
 .badge i { font-style: normal; font-weight: 700; font-size: 13px; }
 .badge.gold { background: var(--gold); }
 .badge.silver { background: var(--silver); }
@@ -1197,7 +1198,8 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
   $('mini-menu').querySelectorAll('[data-mini]').forEach(function(b){b.addEventListener('click',function(){miniStart(b.dataset.mini);});});
   $('mini-list').addEventListener('click',function(){$('mini-play').hidden=true;$('mini-menu').hidden=false;miniKind='';});
   $('mini-restart').addEventListener('click',function(){if(miniKind)miniStart(miniKind);});
-\n  $('arcade-back').addEventListener('click', function(){
+
+  $('arcade-back').addEventListener('click', function(){
     stopBrick(); stopEmbabi(); $('arcade').hidden=true; $('arcade-menu').hidden=false; $('mini-wrap').hidden=true;
   });
 
