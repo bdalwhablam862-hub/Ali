@@ -89,6 +89,52 @@ main{padding:0;gap:0}
   .board{margin:0!important;padding:48px 42px 5px 5px!important;height:100%;min-height:0}
 }
 
+
+/* توسيط منطقة اللعب مثل الصورة المرجعية */
+.stage{position:relative}
+.playfield{position:static}
+.board{
+  position:absolute!important;
+  left:50%!important;
+  top:52%!important;
+  transform:translate(-50%,-50%)!important;
+  width:calc(100% - 112px)!important;
+  height:calc(100% - 300px)!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:12px!important;
+  display:flex!important;
+  flex-flow:row wrap!important;
+  justify-content:center!important;
+  align-content:center!important;
+  align-items:center!important;
+  gap:7px!important;
+  overflow:auto!important;
+  z-index:2;
+}
+.board .tile.played-tile{
+  flex:0 0 98px!important;
+  width:98px!important;
+  min-width:98px!important;
+  height:54px!important;
+}
+.board .stock-pile{right:-48px!important;top:50%!important}
+@media(max-width:650px){
+  .board{
+    top:51%!important;
+    width:calc(100% - 82px)!important;
+    height:calc(100% - 245px)!important;
+    padding:5px!important;
+  }
+  .board .tile.played-tile{
+    flex:0 0 82px!important;
+    width:82px!important;
+    min-width:82px!important;
+    height:45px!important;
+  }
+  .board .stock-pile{right:-39px!important}
+}
+
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
 <section class="stage"><div class="tools"><button id="chatToggle">💬 الدردشة</button><button id="helpToggle">❔ مساعدة</button><button id="emojiToggle">😊</button></div><div class="chatbox hidden" id="chatBox"><b>دردشة الطاولة</b><div class="chatlog" id="chatLog">ابدأوا اللعب واستمتعوا!<br></div><input id="chatInput" maxlength="120" placeholder="اكتب رسالة واضغط Enter"><div class="quickemojis"><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="👍">👍</button><button data-emoji="🔥">🔥</button><button data-emoji="❤️">❤️</button></div><p class="help">الدردشة الحالية داخل نفس الصفحة؛ الدردشة الحية بين جهازين تحتاج ربط خدمة أونلاين.</p></div><div class="playfield">
