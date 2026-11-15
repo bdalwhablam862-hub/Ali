@@ -152,6 +152,27 @@ main{padding:0;gap:0}
 .board .tile.played-tile span+span{border-color:#514b42!important}
 .board .tile.played-tile .pip{background:#33302a!important;box-shadow:0 1px 1px #fff9!important}
 
+
+/* الدبل واقف، والقطع المختلفة نايمة على الطاولة */
+.board .tile.played-tile.double{
+ flex-direction:column!important;
+ width:54px!important;min-width:54px!important;height:98px!important;flex:0 0 54px!important;
+}
+.board .tile.played-tile.double span{width:100%!important;height:50%!important}
+.board .tile.played-tile.double span+span{border-left:0!important;border-top:2px solid #514b42!important}
+.board .tile.played-tile.double .pips{width:100%!important;height:50%!important}
+.board .tile.played-tile.mixed{
+ flex-direction:row!important;
+ width:98px!important;min-width:98px!important;height:54px!important;flex:0 0 98px!important;
+}
+.board .tile.played-tile.mixed span{width:50%!important;height:100%!important}
+.board .tile.played-tile.mixed span+span{border-top:0!important;border-left:2px solid #514b42!important}
+.board .tile.played-tile.mixed .pips{width:50%!important;height:100%!important}
+@media(max-width:650px){
+ .board .tile.played-tile.double{width:45px!important;min-width:45px!important;height:82px!important;flex-basis:45px!important}
+ .board .tile.played-tile.mixed{width:82px!important;min-width:82px!important;height:45px!important;flex-basis:82px!important}
+}
+
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
 <section class="stage"><div class="tools"><button id="chatToggle">💬 الدردشة</button><button id="helpToggle">❔ مساعدة</button><button id="emojiToggle">😊</button></div><div class="chatbox hidden" id="chatBox"><b>دردشة الطاولة</b><div class="chatlog" id="chatLog">ابدأوا اللعب واستمتعوا!<br></div><input id="chatInput" maxlength="120" placeholder="اكتب رسالة واضغط Enter"><div class="quickemojis"><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="👍">👍</button><button data-emoji="🔥">🔥</button><button data-emoji="❤️">❤️</button></div><p class="help">الدردشة الحالية داخل نفس الصفحة؛ الدردشة الحية بين جهازين تحتاج ربط خدمة أونلاين.</p></div><div class="playfield">
@@ -177,7 +198,7 @@ function deck(){const d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b
 const ends=()=>chain.length?[chain[0][0],chain[chain.length-1][1]]:[];
 const can=t=>!chain.length||ends().some(n=>t[0]===n||t[1]===n);
 function face(n){const p={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+p[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>'}
-const tile=(t,played=false)=>'<span class="tile '+(played?'played-tile':(t[0]===t[1]?'double':'mixed')+' handtile')+'">'+face(t[0])+face(t[1])+'</span>';
+const tile=(t,played=false)=>'<span class="tile '+(played?'played-tile '+(t[0]===t[1]?'double':'mixed'):(t[0]===t[1]?'double':'mixed')+' handtile')+'">'+face(t[0])+face(t[1])+'</span>';
 function render(){
  $('youCount').textContent=you.length;$('cpuCount').textContent=cpu.length;$('stockCount').textContent=stock.length;
  $('opponent-hand').innerHTML=cpu.map(()=>'<span class="backtile"></span>').join('');
