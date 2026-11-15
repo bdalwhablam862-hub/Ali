@@ -198,7 +198,19 @@ function deck(){const d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b
 const ends=()=>chain.length?[chain[0][0],chain[chain.length-1][1]]:[];
 const can=t=>!chain.length||ends().some(n=>t[0]===n||t[1]===n);
 function face(n){const p={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+p[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>'}
-const tile=(t,played=false)=>'<span class="tile '+(played?'played-tile '+(t[0]===t[1]?'double':'mixed'):(t[0]===t[1]?'double':'mixed')+' handtile')+'">'+face(t[0])+face(t[1])+'</span>';
+const tile=(t,played=false)=>{
+ const dbl=t[0]===t[1],kind=dbl?'double':'mixed';
+ const cls='tile '+(played?'played-tile '+kind:kind+' handtile');
+ if(!played)return '<span class="'+cls+'">'+face(t[0])+face(t[1])+'</span>';
+ const outer=dbl
+  ? 'display:inline-flex!important;flex-direction:column!important;width:54px!important;min-width:54px!important;height:98px!important;flex:0 0 54px!important;'
+  : 'display:inline-flex!important;flex-direction:row!important;width:98px!important;min-width:98px!important;height:54px!important;flex:0 0 98px!important;';
+ const half=dbl?'width:100%!important;height:50%!important;':'width:50%!important;height:100%!important;';
+ const divider=dbl?'border-left:0!important;border-top:2px solid #514b42!important;':'border-top:0!important;border-left:2px solid #514b42!important;';
+ let a=face(t[0]).replace('<span class="pips">','<span class="pips" style="'+half+'">');
+ let b=face(t[1]).replace('<span class="pips">','<span class="pips" style="'+half+divider+'">');
+ return '<span class="'+cls+'" style="'+outer+'">'+a+b+'</span>';
+};
 function render(){
  $('youCount').textContent=you.length;$('cpuCount').textContent=cpu.length;$('stockCount').textContent=stock.length;
  $('opponent-hand').innerHTML=cpu.map(()=>'<span class="backtile"></span>').join('');
