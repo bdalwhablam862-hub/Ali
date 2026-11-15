@@ -129,6 +129,29 @@ main{padding:0;gap:0}
  .playfield>.board .stock-pile{right:2px!important}
 }
 
+
+/* شكل طاولة وقطع دومينو كلاسيكية مثل الصورة المرجعية */
+.stage{
+ background-color:#9b7657!important;
+ background-image:
+  radial-gradient(ellipse at 48% 48%,#c6a17b66 0%,#7b573d55 100%),
+  repeating-linear-gradient(3deg,#ffffff08 0 2px,#3b241408 3px 5px),
+  linear-gradient(115deg,#b88f69,#8d6548 48%,#b18a65)!important;
+}
+.board{
+ background:transparent!important;
+ gap:3px!important;
+}
+.board .tile.played-tile{
+ background:linear-gradient(145deg,#fffef2 0%,#eee9d8 72%,#d7cfbc 100%)!important;
+ border:3px solid #f8f5e9!important;
+ border-radius:8px!important;
+ box-shadow:inset 0 0 0 1px #b7ae9d,0 3px 6px #39271988!important;
+ color:#25221d!important;
+}
+.board .tile.played-tile span+span{border-color:#514b42!important}
+.board .tile.played-tile .pip{background:#33302a!important;box-shadow:0 1px 1px #fff9!important}
+
 </style></head><body><main>
 <header class="top"><div class="brand"><div class="brandmark">🁣</div><div><h1>ALI GAMES</h1><div class="muted">ألعاب أونلاين مع أصحابك</div></div></div><button onclick="location.href='index.html'">❮ رجوع</button></header>
 <section class="stage"><div class="tools"><button id="chatToggle">💬 الدردشة</button><button id="helpToggle">❔ مساعدة</button><button id="emojiToggle">😊</button></div><div class="chatbox hidden" id="chatBox"><b>دردشة الطاولة</b><div class="chatlog" id="chatLog">ابدأوا اللعب واستمتعوا!<br></div><input id="chatInput" maxlength="120" placeholder="اكتب رسالة واضغط Enter"><div class="quickemojis"><button data-emoji="👏">👏</button><button data-emoji="😂">😂</button><button data-emoji="👍">👍</button><button data-emoji="🔥">🔥</button><button data-emoji="❤️">❤️</button></div><p class="help">الدردشة الحالية داخل نفس الصفحة؛ الدردشة الحية بين جهازين تحتاج ربط خدمة أونلاين.</p></div><div class="playfield">
