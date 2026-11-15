@@ -239,7 +239,7 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     <div class="cg-title"><h2>أفضل الاختيارات لك</h2><span>ألعاب تستحق التجربة</span></div>
     <div class="cg-feature-grid">
       <button class="cg-feature feature-domino" data-game="domino" onclick="location.href='domino.html'"><span class="cg-tag">الأكثر لعبًا</span><span class="cg-art">⚄</span><span class="cg-feature-copy"><b>دومينو أونلاين</b><small>العب مع أصحابك أو ضد الكمبيوتر</small><i>العب الآن ←</i></span></button>
-      <button class="cg-feature feature-foot" data-game="sports" onclick="document.getElementById('go-cpu').click()"><span class="cg-tag">لعبة مميزة</span><span class="cg-art">🏆</span><span class="cg-feature-copy"><b>مزاد نجوم الكرة</b><small>كوّن فريق الأحلام ونافس الكمبيوتر</small><i>العب الآن ←</i></span></button>
+      <button class="cg-feature feature-foot" data-game="sports" onclick="window.startGame && window.startGame('cpu')"><span class="cg-tag">لعبة مميزة</span><span class="cg-art">🏆</span><span class="cg-feature-copy"><b>مزاد نجوم الكرة</b><small>كوّن فريق الأحلام ونافس الكمبيوتر</small><i>العب الآن ←</i></span></button>
     </div>
   </section>
   <section class="cg-section" id="cg-library">
@@ -247,9 +247,9 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     <div class="cg-games">
       <button class="cg-game" data-game="domino" onclick="location.href='domino.html'"><span class="cg-thumb thumb-domino">⚄</span><b>دومينو</b><small>طاولة · أونلاين</small></button>
       <button class="cg-game" data-game="sports" onclick="document.getElementById('go-cpu').click()"><span class="cg-thumb thumb-foot">⚽</span><b>مزاد نجوم الكرة</b><small>رياضة · استراتيجية</small></button>
-      <button class="cg-game" data-game="arcade" onclick="document.getElementById('open-embabi').click()"><span class="cg-thumb thumb-embabi">🏟️</span><b>مزاد إمبابي</b><small>رياضة · أركيد</small></button>
-      <button class="cg-game" data-game="arcade" onclick="document.getElementById('open-brick').click()"><span class="cg-thumb thumb-brick">🧱</span><b>تكسير الطوب</b><small>أركيد · مهارة</small></button>
-      <button class="cg-game" data-game="puzzle" onclick="document.getElementById('open-block').click()"><span class="cg-thumb thumb-block">🟦</span><b>بلوك بلست</b><small>ذكاء · ألغاز</small></button>
+      <button class="cg-game" data-game="arcade" onclick="window.showArcade && window.showArcade('embabi')"><span class="cg-thumb thumb-embabi">🏟️</span><b>مزاد إمبابي</b><small>رياضة · أركيد</small></button>
+      <button class="cg-game" data-game="arcade" onclick="window.showArcade && window.showArcade('brick')"><span class="cg-thumb thumb-brick">🧱</span><b>تكسير الطوب</b><small>أركيد · مهارة</small></button>
+      <button class="cg-game" data-game="puzzle" onclick="window.showArcade && window.showArcade('block')"><span class="cg-thumb thumb-block">🟦</span><b>بلوك بلست</b><small>ذكاء · ألغاز</small></button>
 </div>
     <p class="cg-empty" hidden>مفيش ألعاب مطابقة للبحث ده.</p>
   </section>
@@ -1137,6 +1137,10 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
     else if (which === 'mini') { $('mini-menu').hidden=false; $('mini-play').hidden=true; }
     else showEmbabiSetup();
   }
+  // Expose launchers for the visible home-screen cards; avoids chained hidden-button clicks.
+  window.startGame = startGame;
+  window.showArcade = showArcade;
+
   $('open-brick').addEventListener('click', function(){showArcade('brick');});
   $('open-embabi').addEventListener('click', function(){showArcade('embabi');});
   $('open-block').addEventListener('click', function(){showArcade('block');});
