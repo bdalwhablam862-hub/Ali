@@ -306,4 +306,69 @@ $('onlinePanel').classList.remove('hidden');
 render();
 })();
 </script>
+
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+let peer=null,conn=null,role='off',code='',g={h:[],j:[],stock:[],chain:[],turn:'h',over:true,passes:0};
+const local=()=>role==='guest'?'j':'h';
+const other=()=>local()==='h'?'j':'h';
+const hand=side=>side==='h'?g.h:g.j;
+const ends=()=>g.chain.length?[g.chain[0][0],g.chain[g.chain.length-1][1]]:[];
+const can=t=>!g.chain.length||ends().some(n=>t[0]===n||t[1]===n);
+const say=(s,k='')=>{$('notice').textContent=s;$('notice').className='notice '+k;};
+function face(n){const p={0:[],1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};return '<span class="pips">'+p[n].map(i=>'<i class="pip" style="grid-area:'+(Math.floor(i/3)+1)+'/'+(i%3+1)+'"></i>').join('')+'</span>';}
+function piece(t,played){const dbl=t[0]===t[1],cls='tile '+(played?'played-tile ':'')+(dbl?'double':'mixed')+(played?'':' handtile');return '<span class="'+cls+'">'+face(t[0])+face(t[1])+'</span>';}
+function publish(){if(role==='host'&&conn&&conn.open)conn.send({type:'state',g,notice:$('notice').textContent,noticeClass:$('notice').className});}
+function render(){
+ const mine=hand(local()),opp=hand(other()),myTurn=g.turn===local();
+ $('youCount').textContent=mine.length;$('cpuCount').textContent=opp.length;$('stockCount').textContent=g.stock.length;
+ $('youLabel').textContent=role==='guest'?'أنت':'أنت';$('opLabel').textContent='صاحبك';
+ $('opponent-hand').innerHTML=opp.map(()=>'<span class="backtile"></span>').join('');
+ $('hand').innerHTML=mine.map((t,i)=>'<button data-i="'+i+'" '+(!g.over&&myTurn&&can(t)?'':'disabled')+'>'+piece(t,false)+'</button>').join('');
+ $('board').innerHTML=(g.chain.length?g.chain.map(t=>piece(t,true)).join(''):'<span class="muted">ابدأ الجولة</span>')+'<div class="stock-pile"><div class="stock-label">رصّة السحب</div>'+(g.stock.length?Array.from({length:Math.min(g.stock.length,14)},()=>'<span class="backtile"></span>').join(''):'<span class="stock-empty">خلصت</span>')+'</div>';
+ $('drawBtn').disabled=g.over||!myTurn||!g.stock.length||mine.some(can);
+ $('passBtn').disabled=g.over||!myTurn||g.stock.length>0||mine.some(can);
+ $('newBtn').disabled=role==='guest';
+ $('turnLabel').textContent=g.over?'انتهت الجولة':myTurn?'دورك':'دور صاحبك';
+ $('turnInfo').textContent=g.over?'ابدأ جولة جديدة':'اختار قطعة مناسبة أو اسحب';
+ publish();
+}
+function shuffled(){let d=[];for(let a=0;a<=6;a++)for(let b=a;b<=6;b++)d.push([a,b]);for(let i=d.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[d[i],d[j]]=[d[j],d[i]];}return d;}
+function start(){let d=shuffled();g={h:d.splice(0,7),j:d.splice(0,7),stock:d,chain:[],turn:'h',over:false,passes:0};let best=null;for(const side of ['h','j'])hand(side).forEach((t,i)=>{let rank=(t[0]===t[1]?100+t[0]:t[0]+t[1]);if(!best||rank>best.rank)best={side,i,t,rank};});if(best){hand(best.side).splice(best.i,1);g.chain.push(best.t.slice());g.turn=best.side;}render();say('بدأت الجولة!','good');}
+function finish(){g.over=true;render();const a=g.h.reduce((n,t)=>n+t[0]+t[1],0),b=g.j.reduce((n,t)=>n+t[0]+t[1],0);say(!g.h.length?'أنت كسبت الجولة! 🎉':!g.j.length?'صاحبك كسب الجولة':a===b?'اللعبة اتقفلت — تعادل':'اللعبة اتقفلت — '+(a<b?'أنت كسبت بالنقاط':'صاحبك كسب بالنقاط'),a===b?'warn':(a<b?'good':'warn'));}
+function act(side,action,index){
+ if(role!=='host'||g.over||g.turn!==side)return;
+ const h=hand(side);
+ if(action==='play'){
+  const t=h[index];if(!t||!can(t))return;
+  let v=t.slice();if(g.chain.length){const e=ends();if(t[0]===e[1])v=t.slice();else if(t[1]===e[1])v=[t[1],t[0]];else if(t[1]===e[0])v=t.slice();else v=[t[1],t[0]];}
+  h.splice(index,1);if(!g.chain.length||v[0]===ends()[1]||(!g.chain.length))g.chain.push(v);else g.chain.unshift(v);
+ }else if(action==='draw'){
+  if(!g.stock.length||h.some(can))return;h.push(g.stock.pop());
+ }else if(action==='pass'){
+  if(g.stock.length||h.some(can))return;g.passes++;if(g.passes>=2){finish();return;}
+ }
+ if(!g.h.length||!g.j.length){finish();return;}
+ if(action==='play')g.passes=0;
+ if(action==='play'||action==='pass')g.turn=side==='h'?'j':'h';
+ render();publish();
+}
+function sendAction(action,index){if(role==='guest'){if(conn&&conn.open)conn.send({type:'action',action,index});}else act('h',action,index);}
+function clean(){try{conn&&conn.close();}catch(e){}try{peer&&peer.destroy();}catch(e){}conn=null;peer=null;role='off';code='';$('roomCode').textContent='';$('copyCode').classList.add('hidden');$('leaveRoom').classList.add('hidden');}
+function connect(c,r){conn=c;role=r;c.on('open',()=>{ $('leaveRoom').classList.remove('hidden');if(r==='host'){ $('roomInfo').textContent='الغرفة جاهزة — ابعت الكود لصاحبك.';start();}else{$('roomInfo').textContent='اتصلت بالغرفة، في انتظار بدء اللعبة.';c.send({type:'hello'});} });c.on('data',m=>{if(r==='host'&&m.type==='action')act('j',m.action,m.index);else if(r==='guest'&&m.type==='state'){g=m.g;$('notice').textContent=m.notice||'';$('notice').className=m.noticeClass||'notice';render();}});c.on('close',()=>{say('انقطع اتصال اللاعب الآخر.','warn');clean();});c.on('error',e=>{$('roomInfo').textContent='تعذر الاتصال: '+(e.message||'حاول مرة أخرى');});}
+$('createRoom').addEventListener('click',()=>{clean();if(typeof Peer==='undefined'){say('خدمة الغرف لم تحمل. حدّث الصفحة وحاول مرة أخرى.','warn');return;}code=Math.random().toString(36).slice(2,8).toUpperCase();$('roomInfo').textContent='جاري إنشاء الغرفة...';peer=new Peer('ali-domino-'+code);peer.on('open',()=>{$('roomCode').textContent=code;$('copyCode').classList.remove('hidden');$('roomInfo').textContent='الغرفة جاهزة. ابعت الكود لصاحبك.';});peer.on('connection',c=>{if(conn){c.close();return;}connect(c,'host');});peer.on('error',e=>{$('roomInfo').textContent='تعذر إنشاء الغرفة: '+(e.type==='unavailable-id'?'الكود مستخدم، جرّب إنشاء غرفة جديدة.':e.message||e.type);});});
+$('joinRoom').addEventListener('click',()=>{clean();if(typeof Peer==='undefined'){say('خدمة الغرف لم تحمل. حدّث الصفحة وحاول مرة أخرى.','warn');return;}code=$('joinCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(code.length!==6){$('roomInfo').textContent='اكتب كود الغرفة المكوّن من 6 رموز.';return;}$('roomInfo').textContent='جاري الاتصال بالغرفة...';peer=new Peer();peer.on('open',()=>connect(peer.connect('ali-domino-'+code,{reliable:true}),'guest'));peer.on('error',e=>{$('roomInfo').textContent='تعذر الاتصال: '+(e.message||e.type)+'. تأكد من الكود.';});});
+$('copyCode').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(code);$('roomInfo').textContent='تم نسخ الكود: '+code;}catch(e){$('roomInfo').textContent='انسخ الكود الظاهر: '+code;}});
+$('leaveRoom').addEventListener('click',()=>{clean();say('خرجت من الغرفة.','warn');});
+$('onlineMode').addEventListener('click',()=>{$('onlinePanel').classList.remove('hidden');$('roomInfo').textContent='أنشئ غرفة أو ادخل بكود صاحبك.';});
+$('cpuMode').addEventListener('click',()=>{clean();say('وضع الكمبيوتر متاح من زر العب الآن.','');});
+$('hand').addEventListener('click',e=>{if(role==='off')return;const b=e.target.closest('button[data-i]');if(b){e.preventDefault();e.stopImmediatePropagation();sendAction('play',Number(b.dataset.i));}},{capture:true});
+$('drawBtn').addEventListener('click',e=>{if(role!=='off'){e.stopImmediatePropagation();sendAction('draw');}},{capture:true});
+$('passBtn').addEventListener('click',e=>{if(role!=='off'){e.stopImmediatePropagation();sendAction('pass');}},{capture:true});
+$('newBtn').addEventListener('click',e=>{if(role!=='off'){e.stopImmediatePropagation();if(role==='host'){start();}else say('مضيف الغرفة هو اللي يبدأ جولة جديدة.','warn');}},{capture:true});
+$('chatInput').addEventListener('keydown',e=>{if(role!=='off'&&e.key==='Enter'){e.stopImmediatePropagation();const v=e.target.value.trim();if(v&&conn&&conn.open){conn.send({type:'chat',text:v});const d=document.createElement('div');d.textContent='أنت: '+v;$('chatLog').appendChild(d);e.target.value='';}}},{capture:true});
+})();
+</script>
 </body></html>
