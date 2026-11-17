@@ -11,7 +11,7 @@
 </head>
 <body><main>
 <header class="top"><div><h1>🎮 ALI GAMES</h1><div class="muted">مجتمع اللاعبين — حسابات وغرف ومراسلة</div></div><a href="./">العودة للألعاب</a></header>
-<div id="setupNotice" class="notice">يلزم ربط المشروع أولاً: أضف رابط مشروع Supabase ومفتاح anon/public في إعدادات الصفحة. لا تضع Service Role Key هنا أبداً.</div>
+<div id="setupNotice" class="notice">تم إعداد الاتصال بقاعدة بيانات ALI GAMES. سجّل الدخول أو أنشئ حساباً للبدء.</div>
 <section id="authPanel" class="panel"><h2>👤 تسجيل الدخول أو إنشاء حساب</h2><div class="grid"><div><label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="email"><label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password"><label>اسم اللاعب</label><input id="nickname" maxlength="20" placeholder="اسم يظهر للاعبين"><div class="row"><button id="signup">إنشاء حساب</button><button id="login" class="secondary">دخول</button></div></div><div><p class="muted">استخدم اسماً مستعاراً فقط. لا تكتب رقم الهاتف أو عنوانك أو اسم مدرستك. لا تشارك كلمة المرور مع أي لاعب.</p><p id="authStatus" aria-live="polite"></p></div></div></section>
 <section id="appPanel" class="hidden">
 <div class="panel top"><div>مرحباً <b id="myName"></b><div class="muted" id="onlineStatus">متصل</div></div><button id="logout" class="secondary">تسجيل الخروج</button></div>
@@ -26,8 +26,8 @@
 <script>
 // ضع هنا Project URL و anon/public key من إعدادات Supabase بعد إنشاء المشروع بمساعدة ولي أمرك.
 // لا تستخدم service_role key في المتصفح.
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+const SUPABASE_URL = "https://xuvfhhcaeekrdptcgden.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_H56ljQTiMeIYE9WXPV52lQ_muYtanhl";
 const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
 const $ = id => document.getElementById(id);
 let sb=null, user=null, profile=null, msgChannel=null;
