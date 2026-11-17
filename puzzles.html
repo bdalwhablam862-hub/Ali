@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>عالم الألغاز | ALI GAMES</title>
+<style>
+:root{color-scheme:dark;--bg:#111522;--panel:#1c2334;--line:#394761;--gold:#ffdc55;--muted:#b4bfd2}
+*{box-sizing:border-box}body{margin:0;padding:15px;background:radial-gradient(circle at top,#3a285f,#111522 60%);color:#f7f5ff;font-family:system-ui,"Cairo",sans-serif}
+main{max-width:760px;margin:auto;display:grid;gap:14px}.panel{padding:16px;background:linear-gradient(145deg,#242b40,#191e2e);border:1px solid var(--line);border-radius:19px;box-shadow:0 12px 30px #0003}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{margin:0;font-size:clamp(23px,5vw,34px)}p{color:var(--muted);margin:5px 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:#303b54;color:#fff;min-height:45px}button:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:var(--gold);border-color:var(--gold);color:#211a08;font-weight:900}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.tabs button.active{background:var(--gold);color:#211a08;border-color:var(--gold);font-weight:900}
+.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{padding:8px 12px;background:#111827;border:1px solid var(--line);border-radius:999px;font-size:14px}.pill b{color:var(--gold)}
+#level{color:var(--gold);font-weight:800}.question{font-size:clamp(19px,4vw,25px);font-weight:800;line-height:1.5;margin:12px 0}
+#visual{min-height:150px;display:grid;place-items:center;text-align:center;border-radius:16px;background:linear-gradient(135deg,#283c58,#34234f);font-size:clamp(54px,14vw,90px);letter-spacing:5px;padding:15px;margin:12px 0}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.answers button{text-align:center;font-weight:700;background:#29354c}.answers button.correct{background:#17633e;border-color:#43d58b}.answers button.wrong{background:#6b2b3c;border-color:#f17b8e}
+#feedback{min-height:30px;font-weight:800;color:var(--gold);margin-top:10px}.bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#101827;color:white;font:inherit;text-align:center;font-size:19px}
+.hidden{display:none!important}
+@media(max-width:420px){body{padding:8px}.panel{padding:12px}.answers{grid-template-columns:1fr}.tabs button{padding:9px 5px;font-size:13px}}
+</style></head><body><main>
+<section class="panel"><header><div><h1>🧩 عالم الألغاز</h1><p>ثلاث ألعاب في مكان واحد — فكّر، لاحظ، واكتشف!</p></div><button id="home">الرئيسية</button></header></section>
+<section class="panel"><div class="stats"><span class="pill">⭐ نقاطك: <b id="score">0</b></span><span class="pill">🏆 أفضل نتيجة: <b id="best">0</b></span><span class="pill" id="level">المستوى 1</span></div></section>
+<section class="panel"><div class="tabs">
+<button class="active" data-mode="brain">🧠 ذكاء</button><button data-mode="picture">🖼️ صور</button><button data-mode="words">🔤 كلمات</button>
+</div>
+<div id="game">
+<div id="visual">🧩</div><div class="question" id="question">اختر نوع الألغاز وابدأ التحدي!</div>
+<div id="answers" class="answers"></div>
+<div id="wordbox" class="hidden"><input id="wordanswer" autocomplete="off" placeholder="اكتب إجابتك هنا"><button class="primary" id="checkword" style="width:100%;margin-top:9px">تحقق من الإجابة</button></div>
+<div id="feedback" aria-live="polite"></div>
+<div class="bottom"><span id="progress">السؤال 1</span><button class="primary" id="next">ابدأ اللعب</button></div>
+</div></section>
+<section class="panel"><p>💡 كل إجابة صحيحة = 10 نقاط. كلما تقدمت زادت صعوبة الألغاز. أفضل نتيجة تُحفظ على جهازك.</p></section>
+</main>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const sets={
+brain:[
+{q:'شيء كلما أخذت منه كبر، ما هو؟',a:['الحفرة','العمر','الكتاب','البحر'],c:0},
+{q:'له أسنان ولا يعض، ما هو؟',a:['الأسد','المشط','المفتاح','المنشار'],c:1},
+{q:'ما العدد التالي: 2، 4، 8، 16، ؟',a:['18','24','32','30'],c:2},
+{q:'ما الشيء الذي يكتب ولا يقرأ؟',a:['القلم','الطالب','الكتاب','الهاتف'],c:0},
+{q:'أم أحمد لديها 4 أبناء: شمال وجنوب وشرق، ما اسم الرابع؟',a:['غرب','أحمد','علي','سعيد'],c:1},
+{q:'كم شهرًا في السنة يحتوي على 28 يومًا؟',a:['شهر واحد','شهران','6 أشهر','كل الشهور'],c:3},
+{q:'إذا كان اليوم الثلاثاء، فما اليوم بعد 10 أيام؟',a:['الخميس','الجمعة','السبت','الأحد'],c:1},
+{q:'شيء له رقبة وليس له رأس؟',a:['الزجاجة','الإنسان','الحصان','الشجرة'],c:0}
+],
+picture:[
+{q:'خمن الحيوان من الصورة',v:'🦒',a:['زرافة','حصان','جمل','غزال'],c:0},
+{q:'ما الشيء الذي تراه؟',v:'🌋',a:['جبل جليدي','بركان','جزيرة','شلال'],c:1},
+{q:'خمن الفاكهة',v:'🍍',a:['مانجو','أناناس','بطيخ','ليمون'],c:1},
+{q:'ما وسيلة النقل؟',v:'🚁',a:['طائرة','هليكوبتر','سفينة','قطار'],c:1},
+{q:'ما هذا الكائن؟',v:'🦋',a:['نحلة','فراشة','طائر','يعسوب'],c:1},
+{q:'خمن المكان',v:'🗼',a:['برج','قلعة','متحف','مطار'],c:0},
+{q:'ما هذه الأداة؟',v:'🔭',a:['مجهر','كاميرا','تلسكوب','بوصلة'],c:2},
+{q:'خمن الطقس',v:'🌪️',a:['ضباب','إعصار','مطر','ثلج'],c:1}
+],
+words:[
+{q:'رتّب الحروف لتكوين اسم حيوان',v:'ب  ل  ك',w:'كلب'},
+{q:'رتّب الحروف لتكوين شيء نلعب به',v:'ة  ر  ك',w:'كرة'},
+{q:'رتّب الحروف لتكوين مكان نتعلم فيه',v:'ة  س  ر  د  م',w:'مدرسة'},
+{q:'رتّب الحروف لتكوين شيء في السماء ليلًا',v:'ر  م  ق',w:'قمر'},
+{q:'رتّب الحروف لتكوين فاكهة صفراء',v:'ز  و  م',w:'موز'},
+{q:'رتّب الحروف لتكوين شيء نقرأه',v:'ب  ا  ت  ك',w:'كتاب'},
+{q:'رتّب الحروف لتكوين فصل من فصول السنة',v:'ف  ي  ص',w:'صيف'},
+{q:'رتّب الحروف لتكوين شيء يضيء الغرفة',v:'ح  ا  ب  ص  م',w:'مصباح'}
+]
+};
+let mode='brain',index=0,score=0,best=0,locked=false,answered=0,deck=[];
+try{best=Number(localStorage.getItem('aliPuzzleBest')||0)}catch(e){}
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+function setStats(){$('score').textContent=score;$('best').textContent=best;$('level').textContent='المستوى '+(Math.floor(answered/4)+1);$('progress').textContent='السؤال '+(index+1)+' من '+deck.length}
+function start(){deck=shuffle(sets[mode]);index=0;locked=false;answered=0;score=0;$('feedback').textContent='';$('next').textContent='السؤال التالي';render()}
+function render(){
+ const item=deck[index];if(!item)return;
+ locked=false;$('feedback').textContent='';$('answers').innerHTML='';$('wordbox').classList.toggle('hidden',mode!=='words');
+ $('visual').textContent=mode==='brain'?'🧠':mode==='picture'?item.v:item.v;
+ $('question').textContent=item.q;
+ if(mode==='words'){$('wordanswer').value='';$('wordanswer').focus({preventScroll:true});}
+ else item.a.forEach((ans,i)=>{const b=document.createElement('button');b.textContent=ans;b.addEventListener('click',()=>choose(i));$('answers').appendChild(b)});
+ $('next').disabled=true;setStats();
+}
+function success(ok){if(locked)return;locked=true;answered++;if(ok){score+=10;$('feedback').textContent='إجابة صحيحة! أحسنت 🎉';}else $('feedback').textContent='ليست الإجابة الصحيحة. حاول في السؤال القادم!';if(score>best){best=score;try{localStorage.setItem('aliPuzzleBest',String(best))}catch(e){}}$('score').textContent=score;$('best').textContent=best;$('next').disabled=false;$('next').textContent=index===deck.length-1?'جولة جديدة':'التالي';}
+function choose(i){if(locked)return;const item=deck[index];[...$('answers').children].forEach((b,n)=>{b.disabled=true;if(n===item.c)b.classList.add('correct');if(n===i&&i!==item.c)b.classList.add('wrong')});success(i===item.c)}
+$('checkword').addEventListener('click',()=>{const item=deck[index];const value=$('wordanswer').value.trim().replace(/[\sـ]/g,'');success(value===item.w)});
+$('wordanswer').addEventListener('keydown',e=>{if(e.key==='Enter')$('checkword').click()});
+$('next').addEventListener('click',()=>{if(!$('next').disabled&&index<deck.length-1){index++;render()}else if(!$('next').disabled){start()}else start()});
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;start()}));
+$('home').addEventListener('click',()=>location.href='./');
+$('best').textContent=best;$('next').textContent='ابدأ اللعب';
+})();
+</script></body></html>
