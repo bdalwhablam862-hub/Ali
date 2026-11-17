@@ -1,5 +1,5 @@
--- ALI GAMES Supabase setup
--- Run this in Supabase SQL Editor using the project owner/guardian account.
+-- ALI GAMES: safe, repeatable Supabase schema
+-- Run this in Supabase SQL Editor. Uses authenticated users only.
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nickname text not null check (char_length(nickname) between 2 and 20),
@@ -30,16 +30,41 @@ alter table public.profiles enable row level security;
 alter table public.messages enable row level security;
 alter table public.game_rooms enable row level security;
 alter table public.room_members enable row level security;
+
+drop policy if exists "profiles readable by signed-in players" on public.profiles;
 create policy "profiles readable by signed-in players" on public.profiles for select to authenticated using (true);
+drop policy if exists "players create own profile" on public.profiles;
 create policy "players create own profile" on public.profiles for insert to authenticated with check (auth.uid() = id);
+drop policy if exists "players update own profile" on public.profiles;
 create policy "players update own profile" on public.profiles for update to authenticated using (auth.uid() = id) with check (auth.uid() = id);
+
+drop policy if exists "signed-in players read lobby messages" on public.messages;
 create policy "signed-in players read lobby messages" on public.messages for select to authenticated using (true);
+drop policy if exists "players send own messages" on public.messages;
 create policy "players send own messages" on public.messages for insert to authenticated with check (auth.uid() = user_id);
+
+drop policy if exists "players read open rooms" on public.game_rooms;
 create policy "players read open rooms" on public.game_rooms for select to authenticated using (status = 'open' or auth.uid() = host_id);
+drop policy if exists "players create own rooms" on public.game_rooms;
 create policy "players create own rooms" on public.game_rooms for insert to authenticated with check (auth.uid() = host_id);
+drop policy if exists "hosts update own rooms" on public.game_rooms;
 create policy "hosts update own rooms" on public.game_rooms for update to authenticated using (auth.uid() = host_id) with check (auth.uid() = host_id);
+
+drop policy if exists "players read room memberships" on public.room_members;
 create policy "players read room memberships" on public.room_members for select to authenticated using (true);
+drop policy if exists "players join as themselves" on public.room_members;
 create policy "players join as themselves" on public.room_members for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "players leave own memberships" on public.room_members;
 create policy "players leave own memberships" on public.room_members for delete to authenticated using (auth.uid() = user_id);
--- Enable realtime events for lobby messages (safe to run once; ignore duplicate-publication errors).
-alter publication supabase_realtime add table public.messages;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'messages'
+  ) then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+end $$;
