@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مجتمع اللاعبين | ALI GAMES</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:dark;--bg:#150d26;--card:#24183a;--line:#51416e;--accent:#ffe04a;--fg:#f4effb;--muted:#b9accd}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#43265d,#150d26 65%);color:var(--fg);font-family:system-ui,"Cairo",sans-serif;padding:18px}main{max-width:850px;margin:auto}.top,.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h1,h2{margin:0 0 10px}.muted,small{color:var(--muted)}a{color:var(--accent)}button,input,textarea{font:inherit}button{background:var(--accent);color:#211900;border:0;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}button.secondary{background:#40315b;color:var(--fg);border:1px solid var(--line)}button:disabled{opacity:.5}input,textarea{width:100%;padding:11px;border-radius:10px;border:1px solid var(--line);background:#170f29;color:var(--fg);margin:5px 0 10px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.row{display:flex;gap:8px;align-items:center}.row input{flex:1}.hidden{display:none!important}#messages{height:260px;overflow:auto;background:#170f29;border:1px solid var(--line);border-radius:12px;padding:10px;margin:10px 0}.msg{padding:7px 9px;border-bottom:1px solid #3a2b52;overflow-wrap:anywhere}.room{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:10px 0}.notice{padding:10px;border-radius:10px;background:#49371a;color:#ffe9a6;margin:10px 0}.ok{color:#86f0a1}.err{color:#ff9c9c}
+</style>
+</head>
+<body><main>
+<header class="top"><div><h1>🎮 ALI GAMES</h1><div class="muted">مجتمع اللاعبين — حسابات وغرف ومراسلة</div></div><a href="./">العودة للألعاب</a></header>
+<div id="setupNotice" class="notice">يلزم ربط المشروع أولاً: أضف رابط مشروع Supabase ومفتاح anon/public في إعدادات الصفحة. لا تضع Service Role Key هنا أبداً.</div>
+<section id="authPanel" class="panel"><h2>👤 تسجيل الدخول أو إنشاء حساب</h2><div class="grid"><div><label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="email"><label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password"><label>اسم اللاعب</label><input id="nickname" maxlength="20" placeholder="اسم يظهر للاعبين"><div class="row"><button id="signup">إنشاء حساب</button><button id="login" class="secondary">دخول</button></div></div><div><p class="muted">استخدم اسماً مستعاراً فقط. لا تكتب رقم الهاتف أو عنوانك أو اسم مدرستك. لا تشارك كلمة المرور مع أي لاعب.</p><p id="authStatus" aria-live="polite"></p></div></div></section>
+<section id="appPanel" class="hidden">
+<div class="panel top"><div>مرحباً <b id="myName"></b><div class="muted" id="onlineStatus">متصل</div></div><button id="logout" class="secondary">تسجيل الخروج</button></div>
+<div class="grid">
+<section class="panel"><h2>💬 مراسلة اللاعبين</h2><p class="muted">محادثة عامة للاعبين المسجلين. تجنب مشاركة أي معلومات شخصية.</p><div id="messages" aria-live="polite"></div><div class="row"><input id="messageInput" maxlength="500" placeholder="اكتب رسالة..."><button id="sendMessage">إرسال</button></div></section>
+<section class="panel"><h2>🌐 غرف اللعب</h2><label>اسم الغرفة</label><input id="roomName" maxlength="40" placeholder="مثلاً: دومينو الأصدقاء"><div class="row"><button id="createRoom">إنشاء غرفة</button><button id="refreshRooms" class="secondary">تحديث</button></div><div id="rooms"></div><p class="muted">إنشاء الغرفة والانضمام إليها يعملان بعد إعداد قاعدة البيانات. ربط حركة اللعب الفعلية يحتاج توصيل كل لعبة بالغرفة.</p></section>
+</div>
+<section class="panel"><h2>🧑‍🤝‍🧑 اللاعبون</h2><div id="players" class="muted">يظهر اللاعبون المسجلون هنا.</div></section>
+</section>
+<footer class="muted" style="text-align:center;padding:10px">ALI GAMES • العب باحترام، واحظر وأبلغ عن أي إساءة.</footer>
+</main>
+<script>
+// ضع هنا Project URL و anon/public key من إعدادات Supabase بعد إنشاء المشروع بمساعدة ولي أمرك.
+// لا تستخدم service_role key في المتصفح.
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_PUBLIC_KEY";
+const configured = SUPABASE_URL.startsWith("https://") && !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+const $ = id => document.getElementById(id);
+let sb=null, user=null, profile=null, msgChannel=null;
+function status(t,cls=""){ $("authStatus").textContent=t; $("authStatus").className=cls; }
+function safe(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+if(configured){$("setupNotice").classList.add("hidden");sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}
+else {["signup","login","createRoom","sendMessage"].forEach(id=>$(id).disabled=true);status("بانتظار إعداد مشروع Supabase ومفاتيح الربط.");}
+async function loadProfile(){const {data,error}=await sb.from("profiles").select("*").eq("id",user.id).maybeSingle();if(error)throw error;profile=data;if(!profile){const nick=$("nickname").value.trim()||("لاعب"+user.id.slice(0,5));const r=await sb.from("profiles").insert({id:user.id,nickname:nick}).select().single();if(r.error)throw r.error;profile=r.data;} $("myName").textContent=profile.nickname;$("authPanel").classList.add("hidden");$("appPanel").classList.remove("hidden");await loadMessages();await loadRooms();await loadPlayers();subscribeMessages();}
+async function authDone(){const {data}=await sb.auth.getUser();user=data.user;if(user)try{await loadProfile();}catch(e){status("تعذر تحميل الملف الشخصي: "+e.message,"err");}}
+$("signup").onclick=async()=>{if(!sb)return;const email=$("email").value.trim(),password=$("password").value,nickname=$("nickname").value.trim();if(!email||password.length<8||nickname.length<2){status("أدخل البريد، وكلمة مرور 8 أحرف على الأقل، واسم لاعب من حرفين.","err");return;}const {data,error}=await sb.auth.signUp({email,password,options:{data:{nickname}}});if(error)status(error.message,"err");else if(data.session){user=data.user;await authDone();}else status("تم إنشاء الطلب. افحص البريد لتأكيد الحساب ثم سجّل الدخول.","ok");};
+$("login").onclick=async()=>{if(!sb)return;const {error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});if(error)status(error.message,"err");else await authDone();};
+$("logout").onclick=async()=>{await sb.auth.signOut();location.reload();};
+async function loadMessages(){const {data,error}=await sb.from("messages").select("id,body,created_at,profiles(nickname)").order("created_at",{ascending:true}).limit(100);if(error)throw error;renderMessages(data||[]);}
+function renderMessages(rows){$("messages").innerHTML=rows.map(m=>'<div class="msg"><b>'+safe(m.profiles?.nickname||"لاعب")+'</b> <small>'+new Date(m.created_at).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"})+'</small><div>'+safe(m.body)+'</div></div>').join("");$("messages").scrollTop=$("messages").scrollHeight;}
+function subscribeMessages(){msgChannel=sb.channel("public-lobby").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},async()=>loadMessages()).subscribe();}
+$("sendMessage").onclick=async()=>{const body=$("messageInput").value.trim();if(!body)return;const {error}=await sb.from("messages").insert({user_id:user.id,body});if(error)alert("لم تُرسل الرسالة: "+error.message);else $("messageInput").value="";};
+async function loadRooms(){const {data,error}=await sb.from("game_rooms").select("id,name,code,game,status,created_at").eq("status","open").order("created_at",{ascending:false}).limit(30);if(error){$("rooms").textContent="تعذر تحميل الغرف: "+error.message;return;}$("rooms").innerHTML=(data||[]).map(r=>'<div class="room"><div><b>'+safe(r.name)+'</b><br><small>'+safe(r.game)+' • كود '+safe(r.code)+'</small></div><button class="secondary" data-join="'+safe(r.id)+'">انضمام</button></div>').join("")||'<p class="muted">لا توجد غرف مفتوحة حالياً.</p>';document.querySelectorAll("[data-join]").forEach(b=>b.onclick=()=>joinRoom(b.dataset.join));}
+$("refreshRooms").onclick=loadRooms;
+$("createRoom").onclick=async()=>{const name=$("roomName").value.trim()||"غرفة جديدة";const code=Math.random().toString(36).slice(2,8).toUpperCase();const {data,error}=await sb.from("game_rooms").insert({name,code,game:"general",host_id:user.id}).select().single();if(error)alert("تعذر إنشاء الغرفة: "+error.message);else{await sb.from("room_members").insert({room_id:data.id,user_id:user.id});await loadRooms();alert("تم إنشاء الغرفة. كودها: "+code);}};
+async function joinRoom(id){const {error}=await sb.from("room_members").upsert({room_id:id,user_id:user.id});if(error)alert("تعذر الانضمام: "+error.message);else alert("انضممت للغرفة. افتح لعبة متوافقة مع الغرف للعب مع أصدقائك.");}
+async function loadPlayers(){const {data,error}=await sb.from("profiles").select("nickname").order("nickname").limit(50);$("players").textContent=error?error.message:(data||[]).map(p=>p.nickname).join(" • ")||"لا يوجد لاعبون بعد.";}
+if(configured){sb.auth.onAuthStateChange((_event,session)=>{if(session?.user&&!user){user=session.user;setTimeout(()=>authDone(),0);}});authDone();}
+</script>
+</body></html>
