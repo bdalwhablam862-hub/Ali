@@ -1488,7 +1488,7 @@ body{padding-top:0!important;padding-bottom:30px!important}
  let category='all';
  function filter(){
   const q=(search.value||'').trim().toLowerCase();let shown=0;
-  cards.forEach(el=>{const game=el.dataset.game||'';const matchCat=category==='all'||game===category||(category==='board'&&game==='domino')||(category==='sports'&&game==='sports')||(category==='arcade'&&game==='arcade')||(category==='puzzle'&&game==='puzzle');const matchText=!q||el.innerText.toLowerCase().includes(q);el.style.display=matchCat&&matchText?'':'none';if(matchCat&&matchText&&el.classList.contains('cg-game'))shown++;});
+  cards.forEach(el=>{const game=el.dataset.game||'';const matchCat=category==='all'||game===category||(category==='board'&&(game==='domino'||game==='board'))||(category==='sports'&&game==='sports')||(category==='arcade'&&game==='arcade')||(category==='puzzle'&&game==='puzzle');const matchText=!q||el.innerText.toLowerCase().includes(q);el.style.display=matchCat&&matchText?'':'none';if(matchCat&&matchText&&el.classList.contains('cg-game'))shown++;});
   document.getElementById('cg-count').textContent=shown+' ألعاب';
   document.querySelector('.cg-empty').hidden=shown>0;
  }
