@@ -117,7 +117,7 @@ words:[
 let mode='brain',index=0,score=0,best=0,locked=false,answered=0,deck=[];
 try{best=Number(localStorage.getItem('aliPuzzleBest')||0)}catch(e){}
 function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
-function setStats(){$('score').textContent=score;$('best').textContent=best;$('level').textContent='المستوى '+(Math.floor(answered/4)+1);$('progress').textContent='السؤال '+(index+1)+' من 20}
+function setStats(){$('score').textContent=score;$('best').textContent=best;$('level').textContent='المستوى '+(Math.floor(answered/4)+1);$('progress').textContent='السؤال '+(index+1)+' من 20';}
 function start(){const previous=(()=>{try{return JSON.parse(localStorage.getItem('aliPuzzlePrevious_'+mode)||'[]')}catch(e){return []}})();const pool=shuffle(sets[mode]);const fresh=pool.filter(x=>!previous.includes(x.q));deck=shuffle(fresh).slice(0,20);if(deck.length<20)deck=shuffle(pool).slice(0,20);try{localStorage.setItem('aliPuzzlePrevious_'+mode,JSON.stringify(deck.map(x=>x.q)))}catch(e){}index=0;locked=false;answered=0;score=0;$('feedback').textContent='';$('next').textContent='السؤال التالي';render()}
 function render(){
  const item=deck[index];if(!item)return;
