@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>الشطرنج | ALI GAMES</title>
+<style>
+:root{color-scheme:dark;--bg:#10131b;--panel:#191f2a;--line:#354253;--text:#f4f6fb;--muted:#aab4c4;--gold:#ffe04a}
+*{box-sizing:border-box}body{margin:0;padding:16px;background:radial-gradient(ellipse at top,#27354a,#10131b 65%);color:var(--text);font-family:system-ui,"Cairo",sans-serif}
+main{max-width:760px;margin:auto;display:grid;gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}h1{font-size:clamp(22px,5vw,32px);margin:0}p{margin:5px 0;color:var(--muted)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:#263244;color:var(--text);min-height:44px}button.primary{background:var(--gold);color:#211b08;border-color:var(--gold);font-weight:800}
+#status{font-weight:700;color:#ffe58b;min-height:28px;margin-bottom:8px}
+.board{width:min(100%,620px);margin:auto;display:grid;grid-template-columns:repeat(8,1fr);border:5px solid #5c4936;border-radius:9px;overflow:hidden;aspect-ratio:1;box-shadow:0 12px 30px #0007}
+.square{position:relative;display:grid;place-items:center;aspect-ratio:1;border:0;border-radius:0;padding:0;min-height:0;font-family:"DejaVu Sans",serif;font-size:clamp(25px,7.5vw,57px);line-height:1}
+.light{background:#eadcc1;color:#171717}.dark{background:#77936e;color:#171717}
+.square.selected{outline:4px solid #ffd84d;outline-offset:-4px;background:#d8b84d}
+.square.legal:after{content:"";position:absolute;width:24%;height:24%;border-radius:50%;background:#19251b88}
+.square.capture:after{content:"";position:absolute;inset:5%;border:4px solid #c63d39;border-radius:50%}
+.square.last{box-shadow:inset 0 0 0 4px #f3d35b88}
+.square .coord{position:absolute;bottom:2px;left:4px;font:10px system-ui;color:#1d271f99}
+.legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+#history{max-height:125px;overflow:auto;line-height:1.8;color:var(--muted);font-size:14px}
+@media(min-width:650px){.layout{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:16px;align-items:start}}
+@media(max-width:380px){body{padding:8px}.panel{padding:10px}.board{border-width:3px}.square .coord{font-size:8px}}
+</style>
+</head>
+<body><main>
+<section class="panel">
+<header><div><h1>♟️ الشطرنج — ALI GAMES</h1><p>العب أنت وصاحبك على نفس الجهاز</p></div><div class="actions"><button type="button" id="home">الرئيسية</button><button type="button" class="primary" id="reset">لعبة جديدة</button></div></header>
+</section>
+<section class="panel">
+<div id="status" role="status" aria-live="polite">جاري تحميل لعبة الشطرنج...</div>
+<div class="layout">
+<div id="board" class="board" aria-label="رقعة الشطرنج"></div>
+<div>
+<div class="legend"><span>الأبيض يبدأ</span><span id="turn">الدور: الأبيض</span></div>
+<div class="actions" style="margin:12px 0"><button type="button" id="undo">تراجع نقلة</button><button type="button" id="flip">قلب الرقعة</button></div>
+<h3 style="margin:8px 0">النقلات</h3><div id="history">لم تبدأ النقلات بعد.</div>
+</div>
+</div>
+</section>
+<section class="panel"><div class="legend"><span>اضغط على قطعة ثم اضغط المربع الذي تريد نقلها إليه.</span><span>♔ أبيض · ♚ أسود</span></div></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<script>
+(function(){
+ const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnEl=document.getElementById('turn'),historyEl=document.getElementById('history');
+ if(typeof Chess==='undefined'){statusEl.textContent='تعذر تحميل قواعد الشطرنج. تأكد من اتصال الإنترنت ثم حدّث الصفحة.';return;}
+ const game=new Chess();
+ const glyph={wp:'♙',wn:'♘',wb:'♗',wr:'♖',wq:'♕',wk:'♔',bp:'♟',bn:'♞',bb:'♝',br:'♜',bq:'♛',bk:'♚'};
+ let selected=null,legal=[],flipped=false,last=null;
+ const files='abcdefgh';
+ function render(){
+  boardEl.innerHTML='';
+  const rows=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];
+  const cols=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];
+  rows.forEach((r,ri)=>cols.forEach((c,ci)=>{
+   const sq=files[c]+(8-r),piece=game.get(sq),btn=document.createElement('button');
+   btn.type='button';btn.className='square '+((r+c)%2?'dark':'light');
+   if(selected===sq)btn.classList.add('selected');
+   if(legal.some(m=>m.to===sq))btn.classList.add(piece?'capture':'legal');
+   if(last&&(last.from===sq||last.to===sq))btn.classList.add('last');
+   btn.textContent=piece?glyph[piece.color+piece.type]:'';
+   btn.setAttribute('aria-label',sq+(piece?' '+(piece.color==='w'?'أبيض':'أسود'):''));
+   if((!flipped&&ri===7)||(flipped&&ri===7)){const coord=document.createElement('span');coord.className='coord';coord.textContent=files[c];btn.appendChild(coord);}
+   btn.addEventListener('click',()=>tap(sq));boardEl.appendChild(btn);
+  }));
+  turnEl.textContent='الدور: '+(game.turn()==='w'?'الأبيض':'الأسود');
+  const moves=game.history();
+  historyEl.textContent=moves.length?moves.map((m,i)=>(i%2===0?((i/2+1)+'. '):'')+m).join('  '):'لم تبدأ النقلات بعد.';
+  historyEl.scrollTop=historyEl.scrollHeight;
+  if(game.game_over()){
+   if(game.in_checkmate())statusEl.textContent='كش مات! الفائز: '+(game.turn()==='w'?'الأسود':'الأبيض')+' 🏆';
+   else if(game.in_stalemate())statusEl.textContent='تعادل بسبب الجمود.';
+   else if(game.in_threefold_repetition())statusEl.textContent='تعادل بتكرار الوضع.';
+   else if(game.insufficient_material())statusEl.textContent='تعادل: قطع غير كافية للفوز.';
+   else statusEl.textContent='انتهت المباراة بالتعادل.';
+  }else statusEl.textContent=game.in_check()?'كش! '+(game.turn()==='w'?'الأبيض':'الأسود')+' في خطر.':'الدور على '+(game.turn()==='w'?'الأبيض':'الأسود')+'.';
+ }
+ function tap(sq){
+  if(game.game_over())return;
+  const piece=game.get(sq);
+  if(selected&&legal.some(m=>m.to===sq)){
+   const move=game.move({from:selected,to:sq,promotion:'q'});
+   if(move){last={from:move.from,to:move.to};selected=null;legal=[];render();return;}
+  }
+  if(piece&&piece.color===game.turn()){
+   selected=sq;legal=game.moves({square:sq,verbose:true});
+  }else{selected=null;legal=[];}
+  render();
+ }
+ document.getElementById('reset').addEventListener('click',()=>{game.reset();selected=null;legal=[];last=null;render();});
+ document.getElementById('undo').addEventListener('click',()=>{const m=game.undo();if(m){last=null;selected=null;legal=[];render();}});
+ document.getElementById('flip').addEventListener('click',()=>{flipped=!flipped;render();});
+ document.getElementById('home').addEventListener('click',()=>location.href='./');
+ render();
+})();
+</script>
+</body></html>
