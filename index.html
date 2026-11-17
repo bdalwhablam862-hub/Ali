@@ -264,7 +264,54 @@ button, input { font: inherit; color: inherit; touch-action: manipulation; }
 @media(max-width:650px){#home .cg-feature-grid{grid-template-columns:1fr}#home .cg-feature{min-height:155px}#home .cg-games{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#home .cg-thumb{height:105px}#home .cg-title h2{font-size:20px}}
 @media(min-width:900px){#home .cg-thumb{height:135px}#home .cg-feature{min-height:205px}}
 </style>
-
+<style id="crazygames-inspired-layout">
+/* Original ALI GAMES arcade portal layout, inspired by the browsing feel of CrazyGames */
+:root{--cg-bg:#10131b;--cg-panel:#191e29;--cg-panel2:#222a38;--cg-border:#303949;--cg-text:#f4f6fb;--cg-muted:#aab4c4;--cg-green:#71d34b}
+html,body{background:#10131b!important;color:var(--cg-text)}
+body{padding-top:0!important;padding-bottom:30px!important}
+#home{width:100%;max-width:none;margin:0 auto;gap:18px}
+#home .cg-home{width:min(1320px,100%);right:auto;transform:none;margin:0 auto;padding:0 18px 22px;gap:20px}
+#home .cg-header{position:sticky;top:0;z-index:50;margin:0 -18px;padding:12px max(18px,calc((100% - 1284px)/2));border:0;border-bottom:1px solid #ffffff12;border-radius:0;background:#171c26;box-shadow:0 5px 20px #0005;min-height:58px}
+#home .cg-logo{font-size:23px;letter-spacing:0;color:#fff}
+#home .cg-mark{width:38px;height:38px;border-radius:11px;background:var(--cg-green);color:#142015;font-weight:1000}
+#home .cg-logo b{color:var(--cg-green)}
+#home .cg-header-actions button{background:#252e3b;border:1px solid #394556;border-radius:10px;color:#eaf0f7;padding:8px 13px}
+#home .cg-cats{order:1;gap:8px;padding:4px 0 0}
+#home .cg-cats button{background:#202733;border:1px solid #303b4b;color:#d9e0e9;border-radius:9px;padding:9px 16px;font-weight:700}
+#home .cg-cats button.active{background:var(--cg-green);border-color:var(--cg-green);color:#142015;box-shadow:none}
+#home .cg-search{order:0;background:#202733;border:1px solid #364254;border-radius:10px;color:var(--cg-green);padding:0 14px;max-width:620px;margin-inline-start:auto}
+#home .cg-search input{padding:12px 0;color:#fff}
+#home .cg-search input::placeholder{color:#9aa7b8}
+#home .cg-section{gap:13px}
+#home .cg-title{align-items:center;border-bottom:1px solid #ffffff12;padding-bottom:9px}
+#home .cg-title h2{font-size:21px;color:#f5f7fb;font-weight:900}
+#home .cg-title>span{color:#9ba8ba}
+#home .cg-feature-grid{gap:13px}
+#home .cg-feature{min-height:155px;border-radius:13px;border:1px solid #ffffff18;padding:16px;box-shadow:none;transition:filter .15s,transform .15s}
+#home .cg-feature:hover{filter:brightness(1.12);transform:translateY(-2px)}
+#home .feature-domino{background:linear-gradient(115deg,#164d55,#172d42 72%)}
+#home .feature-foot{background:linear-gradient(115deg,#674a1d,#382b28 72%)}
+#home .cg-tag{background:#101820a8;border:1px solid #ffffff35}
+#home .cg-feature-copy b{font-size:20px}
+#home .cg-feature-copy i{color:#9be875}
+#home .cg-games{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+#home .cg-game{padding:0 0 11px;gap:7px;border:1px solid transparent;border-radius:11px;background:#191f2a;box-shadow:none;overflow:hidden}
+#home .cg-game:hover{transform:translateY(-3px);border-color:#526174;background:#202938;box-shadow:0 8px 20px #0005}
+#home .cg-thumb{height:auto;aspect-ratio:1.48;display:grid;place-items:center;border-radius:0;font-size:54px}
+#home .thumb-domino{background:radial-gradient(circle at 30% 25%,#4c9c9c,#173847 75%)}
+#home .thumb-foot{background:radial-gradient(circle at 70% 30%,#d9a54c,#45331e 78%)}
+#home .thumb-embabi{background:radial-gradient(circle at 65% 25%,#bd75c2,#332b5b 78%)}
+#home .thumb-brick{background:radial-gradient(circle at 40% 25%,#ec8c5e,#542c38 78%)}
+#home .thumb-block{background:radial-gradient(circle at 40% 25%,#65b8e8,#243d70 78%)}
+#home .cg-game b{padding:0 11px;font-size:14px;line-height:1.4;color:#f2f5fa}
+#home .cg-game small{padding:0 11px;color:#9ba8b8;font-size:12px}
+#home .cg-empty{background:#191f2a;border:1px dashed #394556;color:#b8c3d2}
+#home .cg-footer{border:1px solid #303949;background:#191f2a;border-radius:11px;color:#dbe3ed}
+#home .cg-footer small{color:#9ba8b8}
+#home .cg-header-actions button:hover,#home .cg-cats button:hover{filter:brightness(1.15)}
+@media(max-width:1000px){#home .cg-games{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:700px){#home .cg-home{padding:0 12px 18px;gap:16px}#home .cg-header{margin:0 -12px;padding:10px 12px}#home .cg-logo{font-size:19px}#home .cg-header-actions button{padding:8px 10px}#home .cg-games{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}#home .cg-thumb{aspect-ratio:1.4;font-size:49px}#home .cg-feature-grid{grid-template-columns:1fr}#home .cg-feature{min-height:135px}#home .cg-title h2{font-size:19px}}
+</style>
 <main dir="rtl" lang="ar">
 
   <!-- Home page -->
