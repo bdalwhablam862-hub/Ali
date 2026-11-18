@@ -82,7 +82,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
  const game=new Chess(),files='abcdefgh';
  let selected=null,legal=[],flipped=false,last=null;
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x0b111a);scene.fog=new THREE.Fog(0x0b111a,17,29);
- const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(7.8,10.5,12.8);camera.lookAt(0,0,0);
+ const camera=new THREE.OrthographicCamera(-5.8,5.8,5.8,-5.8,.1,100);camera.position.set(8.5,13.5,10.5);camera.lookAt(0,0,0);
  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -128,11 +128,11 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
  function tapSquare(sq){if(game.game_over())return;const p=game.get(sq);if(selected&&legal.some(m=>m.to===sq)){const mv=game.move({from:selected,to:sq,promotion:'q'});if(mv){last={from:mv.from,to:mv.to};selected=null;legal=[];render();return;}}if(p&&p.color===game.turn()){selected=sq;legal=game.moves({square:sq,verbose:true});}else{selected=null;legal=[];}render();}
  function onPointer(e){const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(squares,false);if(hits.length)tapSquare(hits[0].object.userData.square);}
  renderer.domElement.addEventListener('pointerdown',onPointer);
- function resize(){const w=boardEl.clientWidth,h=boardEl.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+ function resize(){const w=boardEl.clientWidth,h=boardEl.clientHeight;renderer.setSize(w,h,false);const aspect=w/Math.max(1,h);const span=5.8;if(aspect>=1){camera.left=-span*aspect;camera.right=span*aspect;camera.top=span;camera.bottom=-span;}else{camera.left=-span;camera.right=span;camera.top=span/aspect;camera.bottom=-span/aspect;}camera.updateProjectionMatrix();}
  new ResizeObserver(resize).observe(boardEl);resize();
  document.getElementById('reset').addEventListener('click',()=>{game.reset();selected=null;legal=[];last=null;render();});
  document.getElementById('undo').addEventListener('click',()=>{if(game.undo()){last=null;selected=null;legal=[];render();}});
- document.getElementById('flip').addEventListener('click',()=>{flipped=!flipped;camera.position.set(flipped?-7.8:7.8,10.5,flipped?-12.8:12.8);camera.lookAt(0,0,0);});
+ document.getElementById('flip').addEventListener('click',()=>{flipped=!flipped;camera.position.set(flipped?-8.5:8.5,13.5,flipped?-10.5:10.5);camera.lookAt(0,0,0);});
  document.getElementById('home').addEventListener('click',()=>location.href='./');
  render();function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);}animate();
 })();
