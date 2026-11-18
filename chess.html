@@ -23,6 +23,28 @@ header{display:flex;justify-content:space-between;align-items:center;gap:10px;fl
 #history{max-height:125px;overflow:auto;line-height:1.8;color:var(--muted);font-size:14px}
 @media(min-width:650px){.layout{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:16px;align-items:start}}
 @media(max-width:380px){body{padding:8px}.panel{padding:10px}.board{border-width:3px}.square .coord{font-size:8px}}
+
+/* ALI GAMES: enhanced 3D chess presentation */
+body{background:radial-gradient(ellipse at 50% 0%,#53677c 0%,#202b3a 38%,#090d15 100%);background-attachment:fixed}
+.panel{background:linear-gradient(145deg,#202d3d,#111923 72%);border-color:#64758a;box-shadow:0 14px 35px #0008,inset 0 1px #ffffff18}
+.board{position:relative;transform:perspective(1100px) rotateX(5deg);transform-origin:center 60%;border:10px solid #76502f;border-radius:13px;background:#3a2416;box-shadow:0 24px 28px #0009,0 9px 0 #432b1a,0 14px 0 #24170f,inset 0 0 0 3px #d6a56a;transition:transform .25s}
+.square{overflow:hidden;transition:filter .12s,transform .12s;box-shadow:inset 0 1px 2px #fff3,inset 0 -3px 5px #0002}
+.light{background:linear-gradient(145deg,#f4e8d0,#cbb58f);color:#21180f}
+.dark{background:linear-gradient(145deg,#9dbb8c,#496a4c);color:#151b12}
+.square:active{filter:brightness(1.18)}
+.square.selected{background:linear-gradient(145deg,#ffe98a,#c69a2d);box-shadow:inset 0 0 0 4px #fff4,inset 0 -5px 10px #74551b66}
+.piece3d{display:inline-block;position:relative;z-index:2;font-family:"DejaVu Sans",serif;font-size:1em;line-height:1;transform:translateY(-3px) scale(1.04);filter:drop-shadow(0 4px 1px #0008) drop-shadow(0 8px 5px #0005);user-select:none;pointer-events:none}
+.piece3d.white{color:#fff8e9;text-shadow:0 1px 0 #fff,1px 2px 0 #b9a98c,2px 4px 0 #796b58,-1px -1px 1px #fff}
+.piece3d.black{color:#26303b;text-shadow:0 1px 0 #8793a1,1px 2px 0 #111923,2px 4px 0 #05080d,-1px -1px 1px #9ba8b5}
+.square.capture:after{z-index:1}
+.square .coord{z-index:3;font-weight:800}
+#status{padding:10px 12px;border-radius:12px;background:linear-gradient(90deg,#27374b,#172333);border:1px solid #65758a}
+.legend span{padding:6px 9px;border-radius:9px;background:#ffffff0c}
+button{box-shadow:0 3px 0 #101722,0 5px 10px #0004}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
+@media(max-width:520px){.board{transform:perspective(900px) rotateX(3deg);border-width:7px}.piece3d{transform:translateY(-2px) scale(1.01)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important}}
+
 </style>
 </head>
 <body><main>
@@ -61,7 +83,7 @@ header{display:flex;justify-content:space-between;align-items:center;gap:10px;fl
    if(selected===sq)btn.classList.add('selected');
    if(legal.some(m=>m.to===sq))btn.classList.add(piece?'capture':'legal');
    if(last&&(last.from===sq||last.to===sq))btn.classList.add('last');
-   btn.textContent=piece?glyph[piece.color+piece.type]:'';
+   if(piece){const token=document.createElement('span');token.className='piece3d '+(piece.color==='w'?'white':'black');token.textContent=glyph[piece.color+piece.type];btn.appendChild(token);}
    btn.setAttribute('aria-label',sq+(piece?' '+(piece.color==='w'?'أبيض':'أسود'):''));
    if((!flipped&&ri===7)||(flipped&&ri===7)){const coord=document.createElement('span');coord.className='coord';coord.textContent=files[c];btn.appendChild(coord);}
    btn.addEventListener('click',()=>tap(sq));boardEl.appendChild(btn);
