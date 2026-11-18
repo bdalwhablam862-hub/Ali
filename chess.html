@@ -98,9 +98,9 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
  const key=new THREE.DirectionalLight(0xffe2b4,2.1);key.position.set(-5,12,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-9;key.shadow.camera.right=9;key.shadow.camera.top=9;key.shadow.camera.bottom=-9;scene.add(key);
  const fill=new THREE.DirectionalLight(0x8bbcff,.75);fill.position.set(7,6,-8);scene.add(fill);
  const mat=(color,metalness=0,roughness=.42)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
- const wood=mat(0x54331f,.22,.3),gold=mat(0xc28b45,.72,.25),lightSq=mat(0xe8d6b4,0,.55),darkSq=mat(0x587d68,0,.5);
+ const wood=mat(0x35170f,.55,.25),gold=mat(0xc28b45,.8,.22),lightSq=mat(0xe5d8bd,.18,.38),darkSq=mat(0x25282b,.45,.3);
  const white=mat(0xf4ead7,.28,.22),black=mat(0x202a38,.52,.22);
- const boardBase=new THREE.Mesh(new THREE.BoxGeometry(8.55,.42,8.55),wood);boardBase.position.y=-.24;boardBase.receiveShadow=true;boardBase.castShadow=true;scene.add(boardBase);
+ const boardBase=new THREE.Mesh(new THREE.BoxGeometry(8.85,.48,8.85),wood);boardBase.position.y=-.24;boardBase.receiveShadow=true;boardBase.castShadow=true;scene.add(boardBase);
  const trim=new THREE.Mesh(new THREE.BoxGeometry(8.7,.12,8.7),gold);trim.position.y=-.02;scene.add(trim);
  const squares=[],pieceMeshes=[],highlights=new Map(),raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0x111a24,0,.9));floor.rotation.x=-Math.PI/2;floor.position.y=-.47;floor.receiveShadow=true;scene.add(floor);
@@ -108,16 +108,67 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
  function cylinder(group,rt,rb,h,material,x,y,z,segments=32){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segments),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
  const pawnProfile=[[.0,0],[.27,0],[.31,.07],[.23,.14],[.17,.23],[.14,.36],[.21,.47],[.22,.55],[.15,.64],[.13,.73],[.18,.83],[.0,.86]];
  function makePiece(type,color){
-  const g=new THREE.Group(),m=color==='w'?white:black,accent=color==='w'?gold:mat(0x8294aa,.65,.25);
-  lathe([[0,0],[.34,0],[.38,.08],[.3,.15],[.22,.2],[.2,.28],[.28,.34],[.25,.4],[0,.42]],m,g,0,0,0);
-  if(type==='p'){lathe(pawnProfile,m,g,0,.34,0);const head=new THREE.Mesh(new THREE.SphereGeometry(.17,24,20),m);head.position.y=1.22;head.castShadow=true;g.add(head);}
-  if(type==='r'){cylinder(g,.25,.3,.62,m,0,.68,0);cylinder(g,.36,.36,.1,accent,0,1.04,0);cylinder(g,.34,.34,.12,m,0,1.17,0);for(let i=0;i<8;i++){const a=i*Math.PI/4;const b=new THREE.Mesh(new THREE.BoxGeometry(.17,.2,.17),m);b.position.set(Math.cos(a)*.25,1.29,Math.sin(a)*.25);b.castShadow=true;g.add(b);}}
-  if(type==='n'){lathe([[0,0],[.28,0],[.32,.1],[.23,.2],[.19,.3],[.23,.42],[0,.45]],m,g,0,.34,0);const neck=new THREE.Mesh(new THREE.ConeGeometry(.24,.78,4),m);neck.position.set(0,1.02,-.03);neck.rotation.x=-.25;neck.rotation.z=-.18;neck.castShadow=true;g.add(neck);const ear=new THREE.Mesh(new THREE.ConeGeometry(.105,.32,4),m);ear.position.set(-.12,1.48,-.04);ear.rotation.z=-.2;ear.castShadow=true;g.add(ear);const eye=new THREE.Mesh(new THREE.SphereGeometry(.035,12,10),accent);eye.position.set(.12,1.19,.15);g.add(eye);}
-  if(type==='b'){lathe([[0,0],[.28,0],[.32,.1],[.2,.22],[.17,.4],[.13,.58],[.1,.72],[.16,.82],[0,.9]],m,g,0,.34,0);const ball=new THREE.Mesh(new THREE.SphereGeometry(.13,24,18),accent);ball.position.y=1.32;ball.castShadow=true;g.add(ball);const slit=new THREE.Mesh(new THREE.BoxGeometry(.045,.28,.045),mat(0x161b22));slit.position.set(.02,1.34,.1);slit.rotation.z=.5;g.add(slit);}
-  if(type==='q'||type==='k'){lathe([[0,0],[.31,0],[.35,.1],[.23,.2],[.19,.36],[.14,.55],[.2,.72],[.16,.84],[0,.9]],m,g,0,.34,0);cylinder(g,.26,.18,.16,.0?m:accent,0,1.2,0);const count=type==='q'?7:4;for(let i=0;i<count;i++){const a=i*Math.PI*2/count;const s=new THREE.Mesh(new THREE.SphereGeometry(type==='q'?.085:.07,16,12),accent);s.position.set(Math.cos(a)*.19,1.36,Math.sin(a)*.19);s.castShadow=true;g.add(s);}if(type==='k'){cylinder(g,.045,.045,.42,accent,0,1.53,0,16);cylinder(g,.18,.18,.07,accent,0,1.55,0,16);const cross=cylinder(g,.04,.04,.3,accent,0,1.53,0,16);cross.rotation.z=Math.PI/2;}}
+  const g=new THREE.Group(),m=color==='w'?mat(0xd9c6a0,.72,.27):mat(0x34251f,.78,.24),accent=color==='w'?mat(0xf3d58b,.78,.2):mat(0xb27b3d,.8,.24),darkMat=color==='w'?mat(0x7e6748,.55,.32):mat(0x171312,.6,.3);
+  const base=(radius,y,height,material)=>cylinder(g,radius*.78,radius,height,material,0,y,0,48);
+  base(.39,.06,.12,darkMat);base(.34,.15,.09,accent);base(.27,.23,.08,m);
+  const bodyProfile=[[0,0],[.22,0],[.27,.08],[.2,.17],[.16,.3],[.19,.42],[.14,.52],[0,.55]];
+  lathe(bodyProfile,m,g,0,.27,0);
+  const ball=(radius,x,y,z,material)=>{const q=new THREE.Mesh(new THREE.SphereGeometry(radius,24,18),material);q.position.set(x,y,z);q.castShadow=true;q.receiveShadow=true;g.add(q);return q;};
+  const box=(w,h,d,x,y,z,material)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);q.position.set(x,y,z);q.castShadow=true;g.add(q);return q;};
+  const cone=(r,h,x,y,z,material,segments=4)=>{const q=new THREE.Mesh(new THREE.ConeGeometry(r,h,segments),material);q.position.set(x,y,z);q.castShadow=true;g.add(q);return q;};
+  // Egyptian royal head and striped nemes headdress
+  if(type==='p'||type==='q'||type==='k'||type==='b'||type==='n'){
+   const headY=type==='p'?1.03:1.15,headR=type==='p'?.16:.19;
+   const head=ball(headR,0,headY,0,m);
+   const hood=new THREE.Mesh(new THREE.SphereGeometry(headR*1.32,24,18,0,Math.PI*2,0,Math.PI*.72),accent);hood.position.set(0,headY+.035,-.015);hood.scale.set(1.12,1.2,1.15);hood.castShadow=true;g.add(hood);
+   box(.09,.34,.12,-.19,headY-.16,.015,accent);box(.09,.34,.12,.19,headY-.16,.015,accent);
+   box(.12,.035,.12,0,headY-.03,.17,accent);
+   ball(.025,-.065,headY+.015,.17,darkMat);ball(.025,.065,headY+.015,.17,darkMat);
+  }
+  if(type==='p'){cone(.12,.22,0,1.36,0,accent,12);}
+  if(type==='r'){
+   // Carved Egyptian obelisk with stepped crown
+   lathe([[0,0],[.25,0],[.28,.08],[.19,.16],[.16,.55],[.11,.78],[0,.9]],m,g,0,.3,0);
+   box(.28,.07,.28,0,1.12,0,accent);cone(.2,.25,0,1.28,0,accent,4);
+   for(let i=-1;i<=1;i++)box(.045,.22,.045,i*.13,1.38,0,accent);
+  }
+  if(type==='n'){
+   // Stylized sculpted horse head and mane
+   const muzzle=cone(.16,.48,0,1.1,.13,m,5);muzzle.rotation.x=Math.PI/2.7;
+   cone(.075,.28,-.13,1.39,-.01,accent,4);cone(.075,.28,.13,1.39,-.01,accent,4);
+   for(let i=0;i<3;i++)box(.055,.2,.08,-.21,1.05-i*.12,-.04,accent);
+  }
+  if(type==='b'){
+   // Anubis-inspired tall jackal ears
+   cone(.075,.36,-.12,1.43,0,accent,4);cone(.075,.36,.12,1.43,0,accent,4);
+   const snout=cone(.11,.32,0,1.03,.2,m,4);snout.rotation.x=Math.PI/2;
+  }
+  if(type==='q'||type==='k'){
+   lathe([[0,0],[.24,0],[.27,.08],[.18,.18],[.14,.42],[.12,.62],[.18,.7],[0,.75]],m,g,0,.32,0);
+   if(type==='q'){
+    // broad queen crown with uraeus ornament
+    cylinder(g,.22,.15,.13,accent,0,1.16,0,32);
+    const crown=new THREE.Mesh(new THREE.SphereGeometry(.19,24,16,0,Math.PI*2,0,Math.PI/2),accent);crown.position.y=1.28;crown.castShadow=true;g.add(crown);
+    cone(.07,.28,0,1.48,.02,accent,12);
+    for(let i=0;i<5;i++){const bead=ball(.045,(i-2)*.085,1.34,.13,accent);}
+   }else{
+    cylinder(g,.24,.17,.14,accent,0,1.17,0,32);
+    // double crown and royal crook
+    const crown=new THREE.Mesh(new THREE.SphereGeometry(.16,24,16,0,Math.PI*2,0,Math.PI/2),accent);crown.position.y=1.3;crown.castShadow=true;g.add(crown);
+    cone(.085,.3,0,1.48,0,accent,4);
+    box(.045,.38,.045,.2,1.25,0,accent);ball(.09,.2,1.46,0,accent);
+    box(.045,.38,.045,-.2,1.25,0,accent);ball(.09,-.2,1.46,0,accent);
+   }
+  }
   g.userData={type,color};return g;
  }
- for(let r=0;r<8;r++)for(let c=0;c<8;c++){const sq=files[c]+(8-r),mesh=new THREE.Mesh(new THREE.BoxGeometry(.995,.12,.995),(r+c)%2?darkSq:lightSq);mesh.position.set(c-3.5,-.02,r-3.5);mesh.receiveShadow=true;mesh.userData={square:sq};scene.add(mesh);squares.push(mesh);}
+ // Rich ebony-and-ivory board with a raised mahogany frame and brass inlay
+ const frameMat=mat(0x35170f,.48,.23),frameEdge=mat(0x6f351d,.58,.22),inlay=mat(0xd7ae62,.82,.2);
+ const rail=(w,h,d,x,y,z,material)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);q.position.set(x,y,z);q.castShadow=true;q.receiveShadow=true;scene.add(q);};
+ rail(9.05,.34,.34,0,-.03,-4.34,frameMat);rail(9.05,.34,.34,0,-.03,4.34,frameMat);
+ rail(.34,.34,8.35,-4.34,-.03,0,frameMat);rail(.34,.34,8.35,4.34,-.03,0,frameMat);
+ rail(9.08,.045,.055,0,.16,-4.34,inlay);rail(9.08,.045,.055,0,.16,4.34,inlay);
+ rail(.055,.045,8.35,-4.34,.16,0,inlay);rail(.055,.045,8.35,4.34,.16,0,inlay);
  function squarePos(sq){return {x:files.indexOf(sq[0])-3.5,z:8-Number(sq[1])-3.5};}
  function clearPieces(){pieceMeshes.forEach(m=>scene.remove(m));pieceMeshes.length=0;}
  function render(){
