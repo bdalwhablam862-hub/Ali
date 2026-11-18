@@ -61,33 +61,6 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
 .layout>div:not(#board){width:100%;max-width:680px}
 @media(min-width:650px){.layout{display:flex!important;flex-direction:column!important}.layout>div:not(#board){width:100%;max-width:680px}}
 
-/* Immersive mobile chess: board uses the full available screen width */
-html,body{width:100%;min-height:100%;margin:0}
-body{padding:0!important;overflow-x:hidden}
-main{width:100%!important;max-width:none!important;margin:0!important;gap:0!important;display:flex!important;flex-direction:column!important}
-main>.panel{width:100%;border-radius:0!important;margin:0;padding:10px 12px}
-main>.panel:first-child{padding:8px 12px}
-main>.panel:nth-child(2){padding:8px 0 10px;border-left:0;border-right:0}
-.layout{width:100%!important;max-width:none!important;gap:8px!important}
-#board.board{width:min(100vw,calc(100dvh - 170px))!important;height:auto!important;aspect-ratio:1/1!important;max-width:none!important;margin:0 auto!important;border-radius:0!important;box-shadow:0 10px 30px #0009!important}
-#board.board canvas{width:100%!important;height:100%!important}
-#status{margin:0 10px 8px!important;min-height:34px;padding:7px 10px!important}
-.layout>div:not(#board){width:100%!important;max-width:none!important;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.layout>div:not(#board) h3,#history{display:none}
-.layout .legend{font-size:12px}
-.layout .actions{margin:0!important}
-main>.panel:last-child{padding:8px 12px}
-@media(max-width:600px){
- body{background:#0b111a}
- main>.panel:first-child header p{display:none}
- main>.panel:first-child h1{font-size:20px}
- main>.panel:first-child .actions button{min-height:38px;padding:6px 10px}
- #board.board{width:min(100vw,calc(100dvh - 145px))!important}
-}
-@media(min-width:601px){
- main{max-width:1000px!important;margin:0 auto!important;padding:14px!important;gap:12px!important}
- #board.board{width:min(88vw,calc(100dvh - 230px),850px)!important;border-radius:14px!important}
-}
 </style>
 </head>
 <body><main>
