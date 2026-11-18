@@ -45,6 +45,10 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
 @media(max-width:520px){.board{transform:perspective(900px) rotateX(3deg);border-width:7px}.piece3d{transform:translateY(-2px) scale(1.01)}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important}}
 
+
+#board{width:min(100%,680px);aspect-ratio:1;margin:auto;position:relative;border:0!important;border-radius:16px!important;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#263b4b,#080d15 75%);box-shadow:0 24px 55px #000b}
+#board canvas{display:block;width:100%;height:100%;touch-action:pan-y}
+@media(max-width:520px){#board{width:100%;border-radius:10px!important}}
 </style>
 </head>
 <body><main>
@@ -54,7 +58,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
 <section class="panel">
 <div id="status" role="status" aria-live="polite">جاري تحميل لعبة الشطرنج...</div>
 <div class="layout">
-<div id="board" class="board" aria-label="رقعة الشطرنج"></div>
+<div id="board" class="board" aria-label="رقعة شطرنج ثلاثية الأبعاد"></div>
 <div>
 <div class="legend"><span>الأبيض يبدأ</span><span id="turn">الدور: الأبيض</span></div>
 <div class="actions" style="margin:12px 0"><button type="button" id="undo">تراجع نقلة</button><button type="button" id="flip">قلب الرقعة</button></div>
@@ -64,59 +68,69 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #101722}
 </section>
 <section class="panel"><div class="legend"><span>اضغط على قطعة ثم اضغط المربع الذي تريد نقلها إليه.</span><span>♔ أبيض · ♚ أسود</span></div></section>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <script>
 (function(){
  const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnEl=document.getElementById('turn'),historyEl=document.getElementById('history');
- if(typeof Chess==='undefined'){statusEl.textContent='تعذر تحميل قواعد الشطرنج. تأكد من اتصال الإنترنت ثم حدّث الصفحة.';return;}
- const game=new Chess();
- const glyph={wp:'♙',wn:'♘',wb:'♗',wr:'♖',wq:'♕',wk:'♔',bp:'♟',bn:'♞',bb:'♝',br:'♜',bq:'♛',bk:'♚'};
+ if(typeof Chess==='undefined'){statusEl.textContent='تعذر تحميل قواعد الشطرنج. تحقق من الإنترنت ثم حدّث الصفحة.';return;}
+ if(typeof THREE==='undefined'){statusEl.textContent='تعذر تحميل محرك الرسومات ثلاثية الأبعاد. تحقق من الإنترنت.';return;}
+ const game=new Chess(),files='abcdefgh';
  let selected=null,legal=[],flipped=false,last=null;
- const files='abcdefgh';
+ const scene=new THREE.Scene();scene.background=new THREE.Color(0x0b111a);scene.fog=new THREE.Fog(0x0b111a,17,29);
+ const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(7.8,10.5,12.8);camera.lookAt(0,0,0);
+ const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+ boardEl.innerHTML='';boardEl.appendChild(renderer.domElement);
+ scene.add(new THREE.HemisphereLight(0xddeaff,0x302016,1.05));
+ const key=new THREE.DirectionalLight(0xffe2b4,2.1);key.position.set(-5,12,7);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-9;key.shadow.camera.right=9;key.shadow.camera.top=9;key.shadow.camera.bottom=-9;scene.add(key);
+ const fill=new THREE.DirectionalLight(0x8bbcff,.75);fill.position.set(7,6,-8);scene.add(fill);
+ const mat=(color,metalness=0,roughness=.42)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
+ const wood=mat(0x54331f,.22,.3),gold=mat(0xc28b45,.72,.25),lightSq=mat(0xe8d6b4,0,.55),darkSq=mat(0x587d68,0,.5);
+ const white=mat(0xf4ead7,.28,.22),black=mat(0x202a38,.52,.22);
+ const boardBase=new THREE.Mesh(new THREE.BoxGeometry(8.55,.42,8.55),wood);boardBase.position.y=-.24;boardBase.receiveShadow=true;boardBase.castShadow=true;scene.add(boardBase);
+ const trim=new THREE.Mesh(new THREE.BoxGeometry(8.7,.12,8.7),gold);trim.position.y=-.02;scene.add(trim);
+ const squares=[],pieceMeshes=[],highlights=new Map(),raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),mat(0x111a24,0,.9));floor.rotation.x=-Math.PI/2;floor.position.y=-.47;floor.receiveShadow=true;scene.add(floor);
+ function lathe(profile,material,group,x,y,z,scale=1){const geo=new THREE.LatheGeometry(profile.map(p=>new THREE.Vector2(p[0],p[1])),32);const m=new THREE.Mesh(geo,material);m.scale.setScalar(scale);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
+ function cylinder(group,rt,rb,h,material,x,y,z,segments=32){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,segments),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
+ const pawnProfile=[[.0,0],[.27,0],[.31,.07],[.23,.14],[.17,.23],[.14,.36],[.21,.47],[.22,.55],[.15,.64],[.13,.73],[.18,.83],[.0,.86]];
+ function makePiece(type,color){
+  const g=new THREE.Group(),m=color==='w'?white:black,accent=color==='w'?gold:mat(0x8294aa,.65,.25);
+  lathe([[0,0],[.34,0],[.38,.08],[.3,.15],[.22,.2],[.2,.28],[.28,.34],[.25,.4],[0,.42]],m,g,0,0,0);
+  if(type==='p'){lathe(pawnProfile,m,g,0,.34,0);const head=new THREE.Mesh(new THREE.SphereGeometry(.17,24,20),m);head.position.y=1.22;head.castShadow=true;g.add(head);}
+  if(type==='r'){cylinder(g,.25,.3,.62,m,0,.68,0);cylinder(g,.36,.36,.1,accent,0,1.04,0);cylinder(g,.34,.34,.12,m,0,1.17,0);for(let i=0;i<8;i++){const a=i*Math.PI/4;const b=new THREE.Mesh(new THREE.BoxGeometry(.17,.2,.17),m);b.position.set(Math.cos(a)*.25,1.29,Math.sin(a)*.25);b.castShadow=true;g.add(b);}}
+  if(type==='n'){lathe([[0,0],[.28,0],[.32,.1],[.23,.2],[.19,.3],[.23,.42],[0,.45]],m,g,0,.34,0);const neck=new THREE.Mesh(new THREE.ConeGeometry(.24,.78,4),m);neck.position.set(0,1.02,-.03);neck.rotation.x=-.25;neck.rotation.z=-.18;neck.castShadow=true;g.add(neck);const ear=new THREE.Mesh(new THREE.ConeGeometry(.105,.32,4),m);ear.position.set(-.12,1.48,-.04);ear.rotation.z=-.2;ear.castShadow=true;g.add(ear);const eye=new THREE.Mesh(new THREE.SphereGeometry(.035,12,10),accent);eye.position.set(.12,1.19,.15);g.add(eye);}
+  if(type==='b'){lathe([[0,0],[.28,0],[.32,.1],[.2,.22],[.17,.4],[.13,.58],[.1,.72],[.16,.82],[0,.9]],m,g,0,.34,0);const ball=new THREE.Mesh(new THREE.SphereGeometry(.13,24,18),accent);ball.position.y=1.32;ball.castShadow=true;g.add(ball);const slit=new THREE.Mesh(new THREE.BoxGeometry(.045,.28,.045),mat(0x161b22));slit.position.set(.02,1.34,.1);slit.rotation.z=.5;g.add(slit);}
+  if(type==='q'||type==='k'){lathe([[0,0],[.31,0],[.35,.1],[.23,.2],[.19,.36],[.14,.55],[.2,.72],[.16,.84],[0,.9]],m,g,0,.34,0);cylinder(g,.26,.18,.16,.0?m:accent,0,1.2,0);const count=type==='q'?7:4;for(let i=0;i<count;i++){const a=i*Math.PI*2/count;const s=new THREE.Mesh(new THREE.SphereGeometry(type==='q'?.085:.07,16,12),accent);s.position.set(Math.cos(a)*.19,1.36,Math.sin(a)*.19);s.castShadow=true;g.add(s);}if(type==='k'){cylinder(g,.045,.045,.42,accent,0,1.53,0,16);cylinder(g,.18,.18,.07,accent,0,1.55,0,16);const cross=cylinder(g,.04,.04,.3,accent,0,1.53,0,16);cross.rotation.z=Math.PI/2;}}
+  g.userData={type,color};return g;
+ }
+ for(let r=0;r<8;r++)for(let c=0;c<8;c++){const sq=files[c]+(8-r),mesh=new THREE.Mesh(new THREE.BoxGeometry(.995,.12,.995),(r+c)%2?darkSq:lightSq);mesh.position.set(c-3.5,-.02,r-3.5);mesh.receiveShadow=true;mesh.userData={square:sq};scene.add(mesh);squares.push(mesh);}
+ function squarePos(sq){return {x:files.indexOf(sq[0])-3.5,z:8-Number(sq[1])-3.5};}
+ function clearPieces(){pieceMeshes.forEach(m=>scene.remove(m));pieceMeshes.length=0;}
  function render(){
-  boardEl.innerHTML='';
-  const rows=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];
-  const cols=flipped?[7,6,5,4,3,2,1,0]:[0,1,2,3,4,5,6,7];
-  rows.forEach((r,ri)=>cols.forEach((c,ci)=>{
-   const sq=files[c]+(8-r),piece=game.get(sq),btn=document.createElement('button');
-   btn.type='button';btn.className='square '+((r+c)%2?'dark':'light');
-   if(selected===sq)btn.classList.add('selected');
-   if(legal.some(m=>m.to===sq))btn.classList.add(piece?'capture':'legal');
-   if(last&&(last.from===sq||last.to===sq))btn.classList.add('last');
-   if(piece){const token=document.createElement('span');token.className='piece3d '+(piece.color==='w'?'white':'black');token.textContent=glyph[piece.color+piece.type];btn.appendChild(token);}
-   btn.setAttribute('aria-label',sq+(piece?' '+(piece.color==='w'?'أبيض':'أسود'):''));
-   if((!flipped&&ri===7)||(flipped&&ri===7)){const coord=document.createElement('span');coord.className='coord';coord.textContent=files[c];btn.appendChild(coord);}
-   btn.addEventListener('click',()=>tap(sq));boardEl.appendChild(btn);
-  }));
+  clearPieces();game.board().forEach((row,r)=>row.forEach((p,c)=>{if(!p)return;const sq=files[c]+(8-r),g=makePiece(p.type,p.color),pos=squarePos(sq);g.position.set(pos.x,.05,pos.z);g.userData.square=sq;scene.add(g);pieceMeshes.push(g);}));
+  highlights.forEach(h=>scene.remove(h));highlights.clear();
+  function mark(sq,color,opacity){const p=squarePos(sq),m=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(p.x,.052,p.z);scene.add(m);highlights.set(sq,m);}
+  if(selected)mark(selected,0xffd33d,.48);
+  legal.forEach(m=>mark(m.to,game.get(m.to)?0xe33c35:0x1c251b,.38));
+  if(last){mark(last.from,0xf5d65c,.2);mark(last.to,0xf5d65c,.3);}
   turnEl.textContent='الدور: '+(game.turn()==='w'?'الأبيض':'الأسود');
-  const moves=game.history();
-  historyEl.textContent=moves.length?moves.map((m,i)=>(i%2===0?((i/2+1)+'. '):'')+m).join('  '):'لم تبدأ النقلات بعد.';
-  historyEl.scrollTop=historyEl.scrollHeight;
-  if(game.game_over()){
-   if(game.in_checkmate())statusEl.textContent='كش مات! الفائز: '+(game.turn()==='w'?'الأسود':'الأبيض')+' 🏆';
-   else if(game.in_stalemate())statusEl.textContent='تعادل بسبب الجمود.';
-   else if(game.in_threefold_repetition())statusEl.textContent='تعادل بتكرار الوضع.';
-   else if(game.insufficient_material())statusEl.textContent='تعادل: قطع غير كافية للفوز.';
-   else statusEl.textContent='انتهت المباراة بالتعادل.';
-  }else statusEl.textContent=game.in_check()?'كش! '+(game.turn()==='w'?'الأبيض':'الأسود')+' في خطر.':'الدور على '+(game.turn()==='w'?'الأبيض':'الأسود')+'.';
+  const moves=game.history();historyEl.textContent=moves.length?moves.map((m,i)=>(i%2===0?((i/2+1)+'. '):'')+m).join('  '):'لم تبدأ النقلات بعد.';historyEl.scrollTop=historyEl.scrollHeight;
+  if(game.game_over()){if(game.in_checkmate())statusEl.textContent='كش مات! الفائز: '+(game.turn()==='w'?'الأسود':'الأبيض')+' 🏆';else if(game.in_stalemate())statusEl.textContent='تعادل بسبب الجمود.';else statusEl.textContent='انتهت المباراة بالتعادل.';}
+  else statusEl.textContent=game.in_check()?'كش! '+(game.turn()==='w'?'الأبيض':'الأسود')+' في خطر.':'الدور على '+(game.turn()==='w'?'الأبيض':'الأسود')+'.';
  }
- function tap(sq){
-  if(game.game_over())return;
-  const piece=game.get(sq);
-  if(selected&&legal.some(m=>m.to===sq)){
-   const move=game.move({from:selected,to:sq,promotion:'q'});
-   if(move){last={from:move.from,to:move.to};selected=null;legal=[];render();return;}
-  }
-  if(piece&&piece.color===game.turn()){
-   selected=sq;legal=game.moves({square:sq,verbose:true});
-  }else{selected=null;legal=[];}
-  render();
- }
+ function tapSquare(sq){if(game.game_over())return;const p=game.get(sq);if(selected&&legal.some(m=>m.to===sq)){const mv=game.move({from:selected,to:sq,promotion:'q'});if(mv){last={from:mv.from,to:mv.to};selected=null;legal=[];render();return;}}if(p&&p.color===game.turn()){selected=sq;legal=game.moves({square:sq,verbose:true});}else{selected=null;legal=[];}render();}
+ function onPointer(e){const rect=renderer.domElement.getBoundingClientRect();pointer.x=((e.clientX-rect.left)/rect.width)*2-1;pointer.y=-((e.clientY-rect.top)/rect.height)*2+1;raycaster.setFromCamera(pointer,camera);const hits=raycaster.intersectObjects(squares,false);if(hits.length)tapSquare(hits[0].object.userData.square);}
+ renderer.domElement.addEventListener('pointerdown',onPointer);
+ function resize(){const w=boardEl.clientWidth,h=boardEl.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+ new ResizeObserver(resize).observe(boardEl);resize();
  document.getElementById('reset').addEventListener('click',()=>{game.reset();selected=null;legal=[];last=null;render();});
- document.getElementById('undo').addEventListener('click',()=>{const m=game.undo();if(m){last=null;selected=null;legal=[];render();}});
- document.getElementById('flip').addEventListener('click',()=>{flipped=!flipped;render();});
+ document.getElementById('undo').addEventListener('click',()=>{if(game.undo()){last=null;selected=null;legal=[];render();}});
+ document.getElementById('flip').addEventListener('click',()=>{flipped=!flipped;camera.position.set(flipped?-7.8:7.8,10.5,flipped?-12.8:12.8);camera.lookAt(0,0,0);});
  document.getElementById('home').addEventListener('click',()=>location.href='./');
- render();
+ render();function animate(){requestAnimationFrame(animate);renderer.render(scene,camera);}animate();
 })();
 </script>
 </body></html>
