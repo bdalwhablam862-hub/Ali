@@ -14,7 +14,72 @@ function boom(x,y,z,color=0xffb52c){for(let i=0;i<12;i++){let p=ball(x,y,z,.07,c
 function base(){scene=new THREE.Scene();scene.background=new THREE.Color(0x101d33);scene.fog=new THREE.Fog(0x101d33,18,45);camera=new THREE.PerspectiveCamera(48,1,.1,100);camera.position.set(0,8,13);camera.lookAt(0,0,0);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2.5));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;$('view').replaceChildren(renderer.domElement);scene.add(new THREE.HemisphereLight(0xcde7ff,0x283044,1.7));let sun=new THREE.DirectionalLight(0xffe8c5,2.6);sun.position.set(-7,12,8);sun.castShadow=true;sun.shadow.mapSize.set(4096,4096);sun.shadow.camera.near=1;sun.shadow.camera.far=45;sun.shadow.bias=-0.00015;scene.add(sun);let glow=new THREE.PointLight(0x398dff,20,30);glow.position.set(6,5,-5);scene.add(glow);root=new THREE.Group();scene.add(root);let floor=mesh(new THREE.PlaneGeometry(26,26),mat(0x254b3b,.95),0,-.3,0);floor.rotation.x=-Math.PI/2;let grid=new THREE.GridHelper(26,26,0x82aa9c,0x3a665b);grid.position.y=-.27;scene.add(grid);renderer.setSize($('view').clientWidth,$('view').clientHeight);camera.aspect=$('view').clientWidth/$('view').clientHeight;camera.updateProjectionMatrix();window.onresize=()=>{let w=$('view').clientWidth,h=$('view').clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()}}
 function human(x,z,color=0x39a9e8){let g=new THREE.Group();ball(0,1.25,0,.25,0xe6bb96,g);box(0,.65,0,.55,.9,.35,color,g);box(-.17,.12,0,.18,.55,.2,0x202b40,g);box(.17,.12,0,.18,.55,.2,0x202b40,g);g.position.set(x,0,z);root.add(g);return g}
 function setup(){cancelAnimationFrame(raf);if(renderer)renderer.dispose();objects=[];targets=[];keys={};score=0;t=0;shots=0;ended=false;running=false;$('score').textContent='النقاط: 0';base();player=null;
-if(mode==='racing'){camera.position.set(0,10,14);camera.lookAt(0,0,-4);box(0,-.12,0,10,.22,42,0x252b36);box(-4.65,-.02,0,.32,.08,42,0xffd24a);box(4.65,-.02,0,.32,.08,42,0xffd24a);box(-1.33,.01,0,.055,.025,42,0xdce8f5);box(1.33,.01,0,.055,.025,42,0xdce8f5);for(let z=-18;z<22;z+=3.5){box(0,.02,z,.13,.035,1.55,0xffffff)}for(let side of [-1,1]){box(side*5.35,.25,0,.22,.5,42,0x687789);for(let z=-18;z<22;z+=4){box(side*5.35,.58,z,.32,.18,.7,0xffc342);let trunk=mesh(new THREE.CylinderGeometry(.12,.18,1.5,10),mat(0x694329),side*7,.75,z);mesh(new THREE.ConeGeometry(.9,2.1,10),mat(0x176b45),side*7,2.35,z)}}let car=new THREE.Group();mesh(new THREE.BoxGeometry(1.35,.42,2.35),mat(0xffb51f,.2,.72),0,.62,0,car);mesh(new THREE.BoxGeometry(1.02,.52,1.12),mat(0x142a42,.12,.62),0,1.04,-.16,car);mesh(new THREE.BoxGeometry(1.42,.12,.42),mat(0xff9c18,.22,.5),0,.83,-.92,car);mesh(new THREE.BoxGeometry(1.5,.1,.3),mat(0x242a35,.4,.35),0,.91,1.08,car);mesh(new THREE.BoxGeometry(.22,.12,.08),mat(0xfff5cf,.15,.1,0xffe6a0),-.43,.65,-1.2,car);mesh(new THREE.BoxGeometry(.22,.12,.08),mat(0xfff5cf,.15,.1,0xffe6a0),.43,.65,-1.2,car);for(let x of [-.4,.4])mesh(new THREE.BoxGeometry(.28,.08,.12),mat(0xffffff,.18,.25),x,.67,-1.19,car);for(let x of [-.73,.73])for(let z of [-.72,.72]){let w=mesh(new THREE.CylinderGeometry(.24,.24,.16,24),mat(0x11151c,.85,.05),x,.38,z,car);w.rotation.z=Math.PI/2}car.position.set(0,0,7);root.add(car);player=car;for(let i=0;i<6;i++){let g=new THREE.Group();mesh(new THREE.BoxGeometry(1.12,.55,1.85),mat([0xff526e,0x35bce8,0x8b72f5][i%3],.24,.48),0,.58,0,g);mesh(new THREE.BoxGeometry(.78,.42,.82),mat(0x17283d,.18,.42),0,.99,-.12,g);for(let x of [-.58,.58])for(let z of [-.55,.55]){let w=mesh(new THREE.CylinderGeometry(.19,.19,.14,20),mat(0x101318),x,.3,z,g);w.rotation.z=Math.PI/2}g.position.set([-2.7,0,2.7][i%3],0,-i*5-5);root.add(g);objects.push(g)}say('اسحب إصبعك يمينًا ويسارًا لتحريك السيارة وتفادي السيارات الأخرى.')}
+if(mode==='racing'){
+camera.fov=52;camera.position.set(0,6.2,18.5);camera.lookAt(0,1.1,-12);camera.updateProjectionMatrix();
+scene.background=new THREE.Color(0x9bd9ee);scene.fog=new THREE.Fog(0xb7d9d5,48,105);
+scene.remove(root);root=new THREE.Group();scene.add(root);
+// asphalt road and shoulders
+box(0,-.18,-9,13.5,.35,82,0x41454b);
+box(-6.95,-.05,-9,.45,.22,82,0xaaaeb0);box(6.95,-.05,-9,.45,.22,82,0xaaaeb0);
+box(-7.55,-.08,-9,.8,.3,82,0x647078);box(7.55,-.08,-9,.8,.3,82,0x647078);
+box(-8.5,-.25,-9,2,.12,82,0x3e9a48);box(8.5,-.25,-9,2,.12,82,0x3e9a48);
+// lane markings
+for(let z=-48;z<32;z+=5){for(let x of [-2.25,2.25])box(x,.012,z,.13,.035,2.6,0xf5f4e9)}
+for(let side of [-1,1]){box(side*6.55,.22,-9,.18,.48,82,0x92999e);for(let z=-45;z<30;z+=3)box(side*6.55,.5,z,.22,.12,.22,0xd6d9d5)}
+// detailed traffic car builder, front points toward -Z
+function raceCar(color,scale=1){
+let g=new THREE.Group(),body=mat(color,.2,.38),glass=mat(0x182b38,.12,.42),black=mat(0x101419,.55,.08),chrome=mat(0xb9c5cb,.22,.72);
+mesh(new THREE.BoxGeometry(1.9,.48,3.55),body,0,.72,0,g);
+mesh(new THREE.BoxGeometry(1.78,.28,1.05),body,0,1.02,-1.12,g);
+mesh(new THREE.BoxGeometry(1.62,.76,1.72),glass,0,1.25,-.18,g);
+mesh(new THREE.BoxGeometry(1.72,.12,.16),body,0,1.67,-.2,g);
+mesh(new THREE.BoxGeometry(1.85,.16,.28),body,0,.58,1.65,g);
+mesh(new THREE.BoxGeometry(1.82,.12,.22),black,0,.52,1.82,g);
+for(let x of [-.68,.68]){
+mesh(new THREE.BoxGeometry(.12,.45,.92),glass,x,1.24,-.18,g);
+mesh(new THREE.BoxGeometry(.12,.34,.75),body,x*1.34,.94,-.05,g);
+mesh(new THREE.BoxGeometry(.34,.12,.12),chrome,x*1.02,.76,-1.79,g);
+mesh(new THREE.BoxGeometry(.34,.13,.1),mat(0xff241c,.2,.05,0xff1008),x*1.02,.78,1.79,g);
+for(let z of [-1.12,1.12]){let w=mesh(new THREE.CylinderGeometry(.34,.34,.22,28),black,x*1.02,.42,z,g);w.rotation.z=Math.PI/2;mesh(new THREE.CylinderGeometry(.17,.17,.226,20),chrome,x*1.02,.42,z,g).rotation.z=Math.PI/2}
+}
+g.scale.setScalar(scale);return g;
+}
+// player's white sports coupe with rear window, spoiler, tail lamps and exhausts
+let car=raceCar(0xf1f4f4,1.22);
+mesh(new THREE.BoxGeometry(1.9,.12,.34),mat(0x252a30,.25,.3),0,1.55,.96,car);
+mesh(new THREE.BoxGeometry(1.65,.09,.18),mat(0xd9e3e7,.2,.55),0,1.62,1.08,car);
+for(let x of [-.7,.7]){
+mesh(new THREE.BoxGeometry(.16,.12,.52),mat(0x151a20),x,.99,.92,car);
+mesh(new THREE.BoxGeometry(.48,.12,.1),mat(0xff2020,.15,.05,0xff1200),x,.82,1.79,car);
+let ex=mesh(new THREE.CylinderGeometry(.09,.12,.18,16),mat(0x9aa9b6,.25,.8),x*.58,.42,1.93,car);ex.rotation.x=Math.PI/2;
+}
+car.position.set(0,0,9);root.add(car);player=car;
+// traffic ahead
+let traffic=[raceCar(0x25c936,.9),raceCar(0xe52e25,1.05),raceCar(0x3c91d8,.82),raceCar(0x252b32,.88)];
+traffic.forEach((o,i)=>{o.position.set([-3.9,3.8,-.2,2.1][i],0,-13-i*9);root.add(o);objects.push(o)});
+// large red city bus to the left ahead
+let bus=new THREE.Group();mesh(new THREE.BoxGeometry(2.8,2.25,6.2),mat(0xd91f27,.24,.22),0,1.55,0,bus);
+mesh(new THREE.BoxGeometry(2.62,.82,4.95),mat(0x152d3c,.12,.4),0,2.02,-.15,bus);
+for(let z of [-2,-.85,.3,1.45])mesh(new THREE.BoxGeometry(.05,.85,.08),mat(0xdce7ed),1.34,2.02,z,bus);
+mesh(new THREE.BoxGeometry(2.82,.18,.22),mat(0xf2f2e9),0,.52,-3.02,bus);
+for(let x of [-1.05,1.05]){for(let z of [-2.1,2.1]){let w=mesh(new THREE.CylinderGeometry(.43,.43,.24,24),mat(0x101318),x,.47,z,bus);w.rotation.z=Math.PI/2}mesh(new THREE.BoxGeometry(.38,.24,.12),mat(0xffffff,.2,.1,0xffffff),x,.8,-3.1,bus)}
+bus.position.set(-4.4,0,-20);bus.scale.setScalar(.8);root.add(bus);objects.push(bus);
+// tunnel: thick stone arch around the roadway
+let arch=mesh(new THREE.TorusGeometry(7.25,1.45,16,64,Math.PI),mat(0x75634e,.92),0,3.15,-31);
+arch.rotation.z=Math.PI;arch.scale.y=.86;
+let inner=mesh(new THREE.TorusGeometry(5.95,.48,12,64,Math.PI),mat(0x332d28,.98),0,3.1,-30.3);inner.rotation.z=Math.PI;inner.scale.y=.9;
+for(let i=0;i<18;i++){let ang=Math.PI+(Math.PI*i/17);let x=Math.cos(ang)*7.25,y=3.15+Math.sin(ang)*7.25*.86;let stone=mesh(new THREE.BoxGeometry(1.25,.65,.45),mat(i%2?0x8b765d:0x9b896e,.95),x,y,-31);stone.rotation.z=ang-Math.PI/2}
+// green scenery, layered trees and bushes
+for(let side of [-1,1])for(let i=0;i<24;i++){let z=-50+i*3.7,x=side*(9+Math.random()*3);
+mesh(new THREE.CylinderGeometry(.16,.27,2.2,8),mat(0x70472c),x,1,z);
+for(let j=0;j<4;j++){let leaf=mesh(new THREE.IcosahedronGeometry(1.15+Math.random()*.35,1),mat([0x167d37,0x249a42,0x43ad4b][j%3],.9),x+(Math.random()-.5)*.65,2.5+j*.35,z+(Math.random()-.5)*.6);leaf.scale.y=.8}
+}
+for(let i=0;i<14;i++){let z=-48+i*5;let bush=mesh(new THREE.IcosahedronGeometry(1.1,1),mat(0x249b43,.95),-9,1.1,z);bush.scale.set(1.8,.8,1.2);let bush2=mesh(new THREE.IcosahedronGeometry(1.1,1),mat(0x17833b,.95),9,1.1,z);bush2.scale.set(1.8,.8,1.2)}
+// roadside wooden MCR racing sign
+let post=box(5.6,2.0,-25,.42,4.5,.42,0x87512d);
+for(let j=0;j<3;j++){let plank=box(5.15,3.35-j*1.12,-25,3.7,.72,.22,0xc28a4d);plank.rotation.y=-.08}
+camera.lookAt(0,1.3,-13);
+say('سباق ثلاثي الأبعاد! اسحب إصبعك يمينًا ويسارًا لتفادي السيارات.');}
 if(mode==='zombie'){camera.position.set(0,11,14);player=human(0,7);for(let i=0;i<5;i++){let z=human((Math.random()-.5)*9,-i*3-4,0x6eaa55);objects.push(z)}for(let i=0;i<5;i++){let k=ball((Math.random()-.5)*10,.35,-i*3, .25,0xffd343);targets.push(k)}say('اجمع المفاتيح الخمسة وابتعد عن الزومبي.')}
 if(mode==='penalty'){camera.position.set(0,8,15);box(0,1,-8,8,2,.25,0xffffff);box(-4,1,-8,.2,2,.2,0xffffff);box(4,1,-8,.2,2,.2,0xffffff);player=ball(0,.35,5,.38,0xffffff);objects.push(box(0,1,-7,.9,1.7,.4,0xff8a28));say('اضغط جهة المرمى التي تريد التسديد إليها. لديك خمس ركلات.')}
 if(mode==='basket'){camera.position.set(0,9,14);box(0,2.8,-7,2.8,2,.2,0xffffff);box(0,3,-6,.15,.15,.15,0xff5b2d);let hoop=mesh(new THREE.TorusGeometry(.7,.08,12,40),mat(0xff5c2d),0,2.2,-6);hoop.rotation.x=Math.PI/2;targets.push(hoop);player=ball(0,.4,6,.42,0xe87922);say('اضغط تسديد لإرسال الكرة نحو السلة.')}
