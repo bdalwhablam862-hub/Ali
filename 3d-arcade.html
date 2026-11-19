@@ -17,7 +17,7 @@ function setup(){cancelAnimationFrame(raf);if(renderer)renderer.dispose();object
 if(mode==='racing'){
 camera.fov=52;camera.position.set(0,6.2,18.5);camera.lookAt(0,1.1,-12);camera.updateProjectionMatrix();
 scene.background=new THREE.Color(0x9bd9ee);scene.fog=new THREE.Fog(0xb7d9d5,48,105);
-scene.remove(root);root=new THREE.Group();scene.add(root);
+scene.children.slice().forEach(o=>{if(o===root||o.isMesh||o.isGridHelper)scene.remove(o)});root=new THREE.Group();scene.add(root);
 // asphalt road and shoulders
 box(0,-.18,-9,13.5,.35,82,0x41454b);
 box(-6.95,-.05,-9,.45,.22,82,0xaaaeb0);box(6.95,-.05,-9,.45,.22,82,0xaaaeb0);
@@ -66,8 +66,8 @@ for(let x of [-1.05,1.05]){for(let z of [-2.1,2.1]){let w=mesh(new THREE.Cylinde
 bus.position.set(-4.4,0,-20);bus.scale.setScalar(.8);root.add(bus);objects.push(bus);
 // tunnel: thick stone arch around the roadway
 let arch=mesh(new THREE.TorusGeometry(7.25,1.45,16,64,Math.PI),mat(0x75634e,.92),0,3.15,-31);
-arch.rotation.z=Math.PI;arch.scale.y=.86;
-let inner=mesh(new THREE.TorusGeometry(5.95,.48,12,64,Math.PI),mat(0x332d28,.98),0,3.1,-30.3);inner.rotation.z=Math.PI;inner.scale.y=.9;
+arch.scale.y=.86;
+let inner=mesh(new THREE.TorusGeometry(5.95,.48,12,64,Math.PI),mat(0x332d28,.98),0,3.1,-30.3);inner.scale.y=.9;
 for(let i=0;i<18;i++){let ang=Math.PI+(Math.PI*i/17);let x=Math.cos(ang)*7.25,y=3.15+Math.sin(ang)*7.25*.86;let stone=mesh(new THREE.BoxGeometry(1.25,.65,.45),mat(i%2?0x8b765d:0x9b896e,.95),x,y,-31);stone.rotation.z=ang-Math.PI/2}
 // green scenery, layered trees and bushes
 for(let side of [-1,1])for(let i=0;i<24;i++){let z=-50+i*3.7,x=side*(9+Math.random()*3);
